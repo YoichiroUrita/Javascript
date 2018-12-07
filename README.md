@@ -52,7 +52,7 @@ $( id of same textarea as cleditor).cleditorXP();  //put after declaration of cl
 ```
 
 - Javascript/jQuery <br>
-~ if your browser is Internet Explorer11, then you should edit jquery.cleditor.js as below OR THROW IE11 AWAY.
+~ If your browser is Internet Explorer11, then you should edit 'jquery.cleditor.js' as below OR THROW IE11 AWAY.
 <br>
 around line 770 (IE11 only)<br>
 Original code
