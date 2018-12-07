@@ -85,3 +85,11 @@ Modify code
     return getSelection(editor).getRangeAt(0);
   }
 ```
+
+- Image file <br>
+  put textbox.gif on image folder as below.<br>
+  
+\------ jquery.cleditor.js<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- jquery.cleditor.textbox.js<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- image<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- textbox.gif<br>
