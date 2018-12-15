@@ -11,6 +11,7 @@
  * Y.Urita 2018.12.4    ver.0.0.1 draggable to resize window
  * Y.Urita 2018.12.5    ver.0.0.2 fixed drag problem when click buttons on resize window 
  * Y.Urita 2018.12.15   ver.0.0.3 enable to drag and drop image file in IE11
+ * Y.Urita 2018.12.15   ver.0.1.0 images enable to drag and drop
  ********************************************************************************************/
  
 (function ($) {
@@ -42,6 +43,7 @@
 		//to dragable resize window
 		var x;
 		var y;
+		var isDrag=false;
 		
 		//mouse down event
 		$("#sizing").on("mousedown",mdown);
@@ -92,9 +94,10 @@
 			mup(e);
 		});
 
-		//Event:double click --- resize image
+		//Event:double click --- pop up resize image window 
 		cled.$frame.contents().find("body").on("dblclick","img",function(e)
 		{
+			isDrag=false;//stop image dragging
 			targetImg=this;
 			if(positionX=="")positionX=cled.$frame.width()/2+cled.$frame.position().left;
 			if(positionY=="")positionY=cled.$frame.height()/2+cled.$frame.position().top;
@@ -119,6 +122,13 @@
 			{
 				var rate=parseFloat($("#zoom").val())/100;
 				$(targetImg).css({"width":"","height":"","zoom":rate});
+			}
+			
+			if(window.navigator.userAgent.indexOf("rv:11")!=-1)
+			{//ie11
+				//to fit between DIV and IMG along width direction
+				var rate=parseFloat($(targetImg).css("zoom"))/100;
+				$(targetImg).closest("div").css("width",$(targetImg).width()*rate+"px");//reset div width for fit img
 			}
 		});
 		
@@ -146,7 +156,20 @@
 						context.canvas.height=img.height;
 						context.drawImage(img,0,0);
 						
-						var thisImg=cled.$frame.contents().find("body").append('<img src="'+Canvas[0].toDataURL('image/png')+'" draggable=true>');
+						var scrTop=cled.$frame.contents().find("body").scrollTop();
+						if(window.navigator.userAgent.indexOf("rv:11")==-1)
+						{//chrome
+							cled.$frame.contents().find("body")
+								.append('<img style="position:absolute;top:'+scrTop
+								+'px;zoom:1.0" src="'+Canvas[0].toDataURL('image/png')+'">');
+						}
+						else
+						{//*e11 
+							cled.$frame.contents().find("body")
+								.append('<div class=".wrapImg" style="position:absolute;top:'+scrTop
+								+'px;zoom:1.0"><img src="'+Canvas[0].toDataURL('image/png')
+								+'"></div>');
+						}
 						
 						var curHtml=cled.$frame.contents().find("body").html();
 						cled.$area.val(curHtml);//write textarea
@@ -165,42 +188,123 @@
 			//Event:drag start ---- pass to dataTransfer
 			cled.$frame.contents().find("body").on("dragstart",function(e)
 			{
-				draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
+				if(e.originalEvent.dataTransfer.files.length!=0)
+				{//drag image file
+					draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
+				}
+				else
+				{//move image(Not file)
+					imgmdown(e);
+				}
 			});
 			
 			cled.$frame.contents().find("body").on("dragover",function(e)
 			{
 				e.preventDefault();
-				console.log("dragover in iframe");
+				if(e.originalEvent.dataTransfer.files.length==0)
+				{//move image
+					imgmmove(e);
+				}
 			});
 			
 			//Event:drop
 			cled.$frame.contents().on("drop",function(e)
 			{
-				//get from dataTransfer
-				var file=e.originalEvent.dataTransfer.files[0];
-				var file_reader = new FileReader();//API
-				
-				//ater file read
-				file_reader.onloadend = function(e){
-
-					// when error occur
-					if(file_reader.error) return;
+				e.preventDefault();
+				e.stopPropagation();
+				if(e.originalEvent.dataTransfer.files.length!=0)
+				{
+					//get from dataTransfer
+					var file=e.originalEvent.dataTransfer.files[0];
+					var file_reader = new FileReader();//API
 					
-					var thisImg=cled.$frame.contents().find("body").append('<img src="'+file_reader.result+'" draggable=true>');
-					var currentHtml=cled.$frame.contents().find("body").html();
-					cled.$area.val(currentHtml);//writting textarea
-					cled.updateTextArea();//update iframe
+					//ater file read
+					file_reader.onloadend = function(e){
+
+						// when error occur
+						if(file_reader.error) return;
+						
+						var scrTop=cled.$frame.contents().find("body").scrollTop();
+						cled.$frame.contents().find("body")
+									.append('<img style="position:absolute;top:'+scrTop
+									+'px;left:0px;zoom:1.0" src="'+file_reader.result+'">');
+						var currentHtml=cled.$frame.contents().find("body").html();
+						cled.$area.val(currentHtml);//writting textarea
+						cled.updateTextArea();//update iframe
+					}
+					file_reader.readAsDataURL(file);
 				}
-				file_reader.readAsDataURL(file);
+				else
+				{
+					imgmup(e);
+				}
 			});
 			
 			//Event:drag end
-			cled.$frame.contents().on("dragend",
-			function(e)
+			cled.$frame.contents().on("dragend",function(e)
 			{
 				//update source
 				cled.updateTextArea();
+			});
+			
+			
+			///to dragable///
+			var frameBody=cled.$frame.contents().find("body");
+			var imgx,imgy,orimX,orimY;
+			
+			//mouse down event
+			$(frameBody).on("mousedown","img",imgmdown);
+						
+			//fire when mouse down on image
+			function imgmdown(e) {
+				isDrag=true;//drag flag on
+
+				//get global position
+				imgx=this.offsetLeft;
+				imgy=this.offsetTop;
+				orimX=e.pageX;
+				orimY=e.pageY;
+				
+				//move event
+				$(frameBody).on("mousemove","img",imgmmove);
+			}
+
+			//fire when mouse move
+			function imgmmove(e) {
+				if(isDrag==true)//prevent move when double click event fire
+				{
+					//prevent default event
+					e.preventDefault();
+					
+					//trace mouse
+					var zoom=$(e.target).css("zoom");
+					var Ximg=(e.pageX-orimX)/parseFloat(zoom)+imgx;
+					var Yimg=(e.pageY-orimY)/parseFloat(zoom)+imgy;
+					$(e.target).css({"top":Yimg + "px","left":Ximg + "px"});
+					
+					//mouse up or mouse leave event
+					$(e.target).on("mouseup",imgmup);
+					$(frameBody).on("mouseleave","img",imgmup);
+				}
+			}
+
+			//fire when mouse up
+			function imgmup(e) {
+				//remove event handler
+				$(frameBody).off("mousemove",imgmmove);
+				$(frameBody).off("mouseleave",imgmup);
+				$(e.target).off("mouseup",imgmup);
+				//isDrag=false;
+			}
+
+			//change icon
+			$(frameBody).on("click","img",function(e){
+				$(e.target).css("cursor","move");
+			});
+			
+			$(frameBody).on("mouseleave","img",function(e){
+				$(e.target).css("cursor","default");
+				$(frameBody).css("cursor","default");
 			});
 		}
 		else
@@ -224,9 +328,24 @@
 				var left=cled.$main.offset().left;
 				var top=cled.$main.offset().top;
 				var divhtml="<div class='cleditorCatcher' style='position:absolute;left:"+left+"px;top:"+top+
-					"px;width:"+ww+"px;height:"+hh+"px'></div>";
+					"px;width:"+ww+"px;height:"+hh+"px;border:red 1px solid'></div>";
 				$("body").append(divhtml);
 				$(".cleditorCatcher").hide();
+				
+				//Event:dragstart
+				cled.$frame.contents().find("body").on("dragstart",function(e)
+				{
+					e.preventDefault();
+					e.stopPropagation();
+					if(e.originalEvent.dataTransfer.files.length!=0)
+					{
+						draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
+					}
+					else
+					{
+						imgmdown(e);
+					}
+				});
 				
 				//Event:dragover on catcher's layer
 				$("body").on("dragover",".cleditorCatcher",function(e)
@@ -239,23 +358,33 @@
 				{
 					e.preventDefault();
 					e.stopPropagation();
-					//get from dataTransfer
-					var file=e.originalEvent.dataTransfer.files[0];
-					var file_reader = new FileReader();//API
-					
-					//ater file read
-					file_reader.onloadend = function(e){
-
-						// when error occur
-						if(file_reader.error) return;
+					if(e.originalEvent.dataTransfer.files.length!=0)
+					{
+						//get from dataTransfer
+						var file=e.originalEvent.dataTransfer.files[0];
+						var file_reader = new FileReader();//API
 						
-						var thisImg=cled.$frame.contents().find("body").append('<img src="'+file_reader.result+'" draggable=true>');
-						var currentHtml=cled.$frame.contents().find("body").html();
-						cled.$area.val(currentHtml);//writting textarea
-						cled.updateTextArea();//update iframe
+						//ater file read
+						file_reader.onloadend = function(e){
+
+							// when error occur
+							if(file_reader.error) return;
+							
+							var scrTop=cled.$frame.contents().find("body").scrollTop();
+							cled.$frame.contents().find("body")
+								.append('<div class=".wrapImg" style="position:absolute;top:'+scrTop
+								+'px;zoom:1.0"><img src="'+file_reader.result
+								+'"></div>');
+							var currentHtml=cled.$frame.contents().find("body").html();
+							cled.$area.val(currentHtml);//writting textarea
+							cled.updateTextArea();//update iframe
+						}
+						file_reader.readAsDataURL(file);
+					}	
+					else
+					{
+						imgmup(e);
 					}
-					file_reader.readAsDataURL(file);
-					
 					$(".cleditorCatcher").hide();
 				});
 				
@@ -264,9 +393,74 @@
 				{
 					$(".cleditorCatcher").show();
 				});
+				
+				///to dragable///
+				var frameBody=cled.$frame.contents().find("body");
+				var imgx,imgy,orimX,orimY;
+				
+				//mouse down event
+				$(frameBody).on("mousedown","img",imgmdown);
+							
+				//fire when mouse down on image
+				function imgmdown(e) {
+					isDrag=true;//drag flag on
+					if(imgx=="" && imgy=="")
+					{
+						var divOffset=$(this).closest("div").offset();
+						//get global position
+						imgx=divOffset.left;
+						imgy=divOffset.top;
+						orimX=e.pageX;
+						orimY=e.pageY;
+					}
+					
+					//move event
+					$(frameBody).on("mousemove","img",imgmmove);
+				}
+
+				//fire when mouse move
+				function imgmmove(e) {
+					if(isDrag==true)//prevent move when double click event fire
+					{
+						//prevent default event
+						e.preventDefault();
+						
+						//trace mouse
+						//var zoom=$(e.target).find("img").css("zoom");
+						//var Ximg=(e.pageX-orimX)/parseFloat(zoom)+imgx;
+						//var Yimg=(e.pageY-orimY)/parseFloat(zoom)+imgy;
+						var Ximg=e.pageX-orimX+imgx;
+						var Yimg=e.pageY-orimY+imgy;
+						$(e.target).parent().css({"top":Yimg + "px","left":Ximg + "px"});
+						
+						//mouse up or mouse leave event
+						$(e.target).on("mouseup",imgmup);
+						$(frameBody).on("mouseleave","img",imgmup);
+					}
+				}
+
+				//fire when mouse up
+				function imgmup(e) {
+					//remove event handler
+					$(frameBody).off("mousemove",imgmmove);
+					$(frameBody).off("mouseleave",imgmup);
+					$(e.target).off("mouseup",imgmup);
+					isDrag=false;
+					imgx=imgy="";
+				}
+
+				//change icon
+				$(frameBody).on("click",".wrapImg",function(e){
+					$(e.target).css("cursor","move");
+				});
+				
+				$(frameBody).on("mouseleave",".wrapImg",function(e){
+					$(e.target).css("cursor","default");
+					$(frameBody).css("cursor","default");
+				});
 			});
 		}
-		
+				
 		//refer from 
 		//https://ourcodeworld.com/articles/read/491/how-to-retrieve-images-from-the-clipboard-with-javascript-in-the-browser
 		function retrieveImageFromClipboardAsBlob(pasteEvent, callback){
