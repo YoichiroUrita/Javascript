@@ -17,7 +17,7 @@ plug-in about javascript/jQuery<br>
 			<i> If it's still black, then recross border line. (Almost fail to drop file if border is black)</i><br>
 		</li>
 		<li>
-			<i> In IE11, Don NOT use jquery-UI ,because of conflict this. </i>
+			<i> In IE11, Do NOT use jQuery-UI ,because of conflict this. </i>
 		</li>
 	</ul>
 2) Paste image by clippboard<br>
