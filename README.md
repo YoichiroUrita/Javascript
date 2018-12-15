@@ -9,13 +9,24 @@ plug-in about javascript/jQuery<br>
 
  This is simple plug-in for <a href="https://premiumsoftware.net/cleditor">jquery-cleditor</a>.
  
-- Read image file by drag and drop <br>
-&nbsp;&nbsp;-> Image is encoded to **base64**. <s> [This function doesn't work at IE11] </s>
-- Paste image by clippboard <br>
-&nbsp;&nbsp;-> Image is encoded to **base64**.
-- Resize image <br>
-&nbsp;&nbsp;-> Resize window pop up by **double click** on image.
-
+1) Read image file by drag and drop<br>
+	-> Image is encoded to **base64**. <s> [This function doesn't work at IE11] </s><br>
+	<ul>
+		<li>
+			<i> In IE11, Border of target flame turns red, then you can drop.</i><br>
+			<i> If it's still black, then recross border line. (Almost fail to drop file if border is black)</i><br>
+		</li>
+		<li>
+			<i> In IE11, Don NOT use jquery-UI ,because of conflict this. </i>
+		</li>
+	</ul>
+2) Paste image by clippboard<br>
+	-> Image is encoded to **base64**.
+3) Resize image <br>
+	-> Resize window pop up by **double click** on image.
+4) Drag and Drop image <br>
+	-> Just mouse down and move mouse on image. But, Not smooth at IE11.
+		
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
 <em> How to use?</em><br>
 - HTML
@@ -31,6 +42,7 @@ plug-in about javascript/jQuery<br>
 $( id of same textarea as cleditor).cleditorXP();  //put after declaration of cleditor
 ```
 
+Well...M$, Thanks for reduce my weekend..so, 「敢えて言おうカスであると！」
 ***
 # jquery.cleditor.textbox.js<br>
 <br>
