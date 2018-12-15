@@ -10,7 +10,7 @@ plug-in about javascript/jQuery<br>
  This is simple plug-in for <a href="https://premiumsoftware.net/cleditor">jquery-cleditor</a>.
  
 - Read image file by drag and drop <br>
-&nbsp;&nbsp;-> Image is encoded to **base64**.[This function doesn't work at IE11]
+&nbsp;&nbsp;-> Image is encoded to **base64**. <s> [This function doesn't work at IE11] </s>
 - Paste image by clippboard <br>
 &nbsp;&nbsp;-> Image is encoded to **base64**.
 - Resize image <br>
