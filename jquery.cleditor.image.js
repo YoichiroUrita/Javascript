@@ -10,6 +10,7 @@
  * Y.Urita 2018.12.2	ver.0.0.0
  * Y.Urita 2018.12.4    ver.0.0.1 draggable to resize window
  * Y.Urita 2018.12.5    ver.0.0.2 fixed drag problem when click buttons on resize window 
+ * Y.Urita 2018.12.15   ver.0.0.3 enable to drag and drop image file in IE11
  ********************************************************************************************/
  
 (function ($) {
@@ -99,6 +100,33 @@
 			if(positionY=="")positionY=cled.$frame.height()/2+cled.$frame.position().top;
 			$(sizing).css({"top":positionY+"px","left":positionY+"px"}).show();
 		});
+				
+		//click apply button
+		$(document).on("click","#butApply",function()		
+		{
+			var radioVal=$("#sizing input[name=sizing]:checked").val();
+			if(radioVal=="width")
+			{
+				var w=cled.$frame.contents().find("body").width();
+				$(targetImg).css({"width":w+"px","height":"","zoom":""});
+			}
+			else if(radioVal=="height")
+			{
+				var h=cled.$frame.contents().find("body").height();
+				$(targetImg).css({"width":"","height":h+"px","zoom":""});
+			}
+			else if(radioVal=="zoom")
+			{
+				var rate=parseFloat($("#zoom").val())/100;
+				$(targetImg).css({"width":"","height":"","zoom":rate});
+			}
+		});
+		
+		//click close
+		$(document).on("click","#butClose",function()
+		{
+			$(sizing).hide();
+		});
 		
 		//Event:paste
 		cled.$frame.contents().find("body").on('paste',function(e)
@@ -131,71 +159,113 @@
 			})	
 		});
 		
-		//Event:drag start ---- pass to dataTransfer
-		cled.$frame.contents().find("body").on("dragstart",
-		function(e)
-		{
-			draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
-		});
-		
-		//Event:drop
-		cled.$frame.contents().on("drop",
-		function(e)
-		{
-			//get from dataTransfer
-			var file=e.originalEvent.dataTransfer.files[0];
-			var file_reader = new FileReader();//API
+		//Drag and Drop
+		if(window.navigator.userAgent.indexOf("rv:11")==-1)
+		{//chrome
+			//Event:drag start ---- pass to dataTransfer
+			cled.$frame.contents().find("body").on("dragstart",function(e)
+			{
+				draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
+			});
 			
-			//ater file read
-			file_reader.onloadend = function(e){
-
-				// when error occur
-				if(file_reader.error) return;
+			cled.$frame.contents().find("body").on("dragover",function(e)
+			{
+				e.preventDefault();
+				console.log("dragover in iframe");
+			});
+			
+			//Event:drop
+			cled.$frame.contents().on("drop",function(e)
+			{
+				//get from dataTransfer
+				var file=e.originalEvent.dataTransfer.files[0];
+				var file_reader = new FileReader();//API
 				
-				var thisImg=cled.$frame.contents().find("body").append('<img src="'+file_reader.result+'" draggable=true>');
-				var currentHtml=cled.$frame.contents().find("body").html();
-				cled.$area.val(currentHtml);//writting textarea
-				cled.updateTextArea();//update iframe
-			}
-			file_reader.readAsDataURL(file);
+				//ater file read
+				file_reader.onloadend = function(e){
+
+					// when error occur
+					if(file_reader.error) return;
+					
+					var thisImg=cled.$frame.contents().find("body").append('<img src="'+file_reader.result+'" draggable=true>');
+					var currentHtml=cled.$frame.contents().find("body").html();
+					cled.$area.val(currentHtml);//writting textarea
+					cled.updateTextArea();//update iframe
+				}
+				file_reader.readAsDataURL(file);
+			});
 			
-			
-		});
-		
-		//Event:drag end
-		cled.$frame.contents().on("dragend",
-		function(e)
-		{
-			//update source
-			cled.updateTextArea();
-		});
-		
-		//click apply button
-		$(document).on("click","#butApply",function()		
-		{
-			var radioVal=$("#sizing input[name=sizing]:checked").val();
-			if(radioVal=="width")
+			//Event:drag end
+			cled.$frame.contents().on("dragend",
+			function(e)
 			{
-				var w=cled.$frame.contents().find("body").width();
-				$(targetImg).css({"width":w+"px","height":"","zoom":""});
-			}
-			else if(radioVal=="height")
+				//update source
+				cled.updateTextArea();
+			});
+		}
+		else
+		{//horrible IE11
+			//TOO LONG PAINFUL JOURNEY
+			//I don't know why appended iframe's body ignore drag event listener in IE11 on cleditor.
+			//So,my idea are as below.
+			//1. make new layer on cleditor as catch dragging file.
+			//2. hide catcher's layer until dragging file enter.
+			//3. after draggin file enter, prevent default event and write image on html by base64endocing.
+			//4. hide catcher's layer again as NINJA.
+			$(document).ready(function(e)
 			{
-				var h=cled.$frame.contents().find("body").height();
-				$(targetImg).css({"width":"","height":h+"px","zoom":""});
-			}
-			else if(radioVal=="zoom")
-			{
-				var rate=parseFloat($("#zoom").val())/100;
-				$(targetImg).css({"width":"","height":"","zoom":rate});
-			}
-		});
-		
-		//click close
-		$(document).on("click","#butClose",function()
-		{
-			$(sizing).hide();
-		});
+				
+				//waiting until DOM is ready
+				var frmDocument=cled.$frame.contents();
+				
+				//make catcher layer (div element)
+				var ww=cled.$main.width();
+				var hh=cled.$main.height();
+				var left=cled.$main.offset().left;
+				var top=cled.$main.offset().top;
+				var divhtml="<div class='cleditorCatcher' style='position:absolute;left:"+left+"px;top:"+top+
+					"px;width:"+ww+"px;height:"+hh+"px'></div>";
+				$("body").append(divhtml);
+				$(".cleditorCatcher").hide();
+				
+				//Event:dragover on catcher's layer
+				$("body").on("dragover",".cleditorCatcher",function(e)
+				{
+					e.preventDefault();
+				});
+				
+				//Event:drop on cacher's layer
+				$("body").on("drop",".cleditorCatcher",function(e)
+				{
+					e.preventDefault();
+					e.stopPropagation();
+					//get from dataTransfer
+					var file=e.originalEvent.dataTransfer.files[0];
+					var file_reader = new FileReader();//API
+					
+					//ater file read
+					file_reader.onloadend = function(e){
+
+						// when error occur
+						if(file_reader.error) return;
+						
+						var thisImg=cled.$frame.contents().find("body").append('<img src="'+file_reader.result+'" draggable=true>');
+						var currentHtml=cled.$frame.contents().find("body").html();
+						cled.$area.val(currentHtml);//writting textarea
+						cled.updateTextArea();//update iframe
+					}
+					file_reader.readAsDataURL(file);
+					
+					$(".cleditorCatcher").hide();
+				});
+				
+				//Event:dragenter on cleditor area
+				$("body").on("dragenter",cled.$main,function(e)
+				{
+					$(".cleditorCatcher").show();
+				});
+			});
+		}
 		
 		//refer from 
 		//https://ourcodeworld.com/articles/read/491/how-to-retrieve-images-from-the-clipboard-with-javascript-in-the-browser
