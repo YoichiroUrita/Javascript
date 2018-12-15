@@ -17,7 +17,7 @@ plug-in about javascript/jQuery<br>
 			<i> If it's still black, then recross border line. (Almost fail to drop file if border is black)</i><br>
 		</li>
 		<li>
-			<i> In IE11, Do NOT use jQuery-UI ,because of conflict this. </i>
+			<i> In IE11, Do NOT use jQuery-UI ,because of conflict with this. </i>
 		</li>
 	</ul>
 2) Paste image by clippboard<br>
@@ -42,7 +42,7 @@ plug-in about javascript/jQuery<br>
 $( id of same textarea as cleditor).cleditorXP();  //put after declaration of cleditor
 ```
 
-Well...M$, Thanks for reduce my weekend..so, 「敢えて言おうカスであると！」
+Well...M$, Thanks for reduce my weekend..so, 「敢えて言おう、カスであると！」
 ***
 # jquery.cleditor.textbox.js<br>
 <br>
