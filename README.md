@@ -42,7 +42,7 @@ plug-in about javascript/jQuery<br>
 $( id of same textarea as cleditor).cleditorXP();  //put after declaration of cleditor
 ```
 
-Well...M$, Thanks for reduce my weekend..so, 「敢えて言おう、カスであると！」
+Well...M$, Thanks for reduce my weekend..so, 「敢えて言おう、カスであると！(If it is dare say you scum)」by Gihren Zabi
 ***
 # jquery.cleditor.textbox.js<br>
 <br>
