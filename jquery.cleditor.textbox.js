@@ -8,7 +8,8 @@
  *
  * Licensed under the MIT or GPL Version 2
  * Y.Urita 2018.12.5	ver.0.0.0
- * Y.Urita 2018.12.7    ver.0.0.1  fix error which occurred in ie11
+ * Y.Urita 2018.12.7    ver.0.0.1 fix error which occurred in ie11
+ * Y.Urita 2018.12.16   ver.0.0.2 fit with scroll position in initial vertical direction
  ********************************************************************************************/
  
 (function ($) {
@@ -104,75 +105,76 @@
     // Text box button click event handler
     function textboxButtonClick(e, data) {
         // Wire up the submit button click event handler
-	$(data.popup).find(".colorpicker")
+		$(data.popup).find(".colorpicker")
             .off("click")
             .on("click", function (e) {
-				
                 // Get the editor
                 var editor = data.editor;
 				
                 // Get the column and row count
- 		var	bgcolor=$(e.target).css("background-color");
-					
+ 				var	bgcolor=$(e.target).css("background-color");
+				
                 // Build the html
-                var html = "<textarea style='width:100px;height:20px;background-color:"+bgcolor+";position:absolute'></textarea>";
+				var frameBody=$(editor.$frame[0]).contents().find("body");
+				var scrTop=$(frameBody).scrollTop();
+                var html = "<textarea style='position:absolute;top:"+scrTop+"px;width:100px;height:20px;background-color:"
+						+bgcolor+";'></textarea>";
 
                 // Insert the html
-		var frameBody=$(editor.$frame[0]).contents().find("body");
                 if (html)
-		{	
-			$(frameBody).append(html);
-			//editor.doc.execCommand('insertHTML',false,html);
-		}
+				{	
+					$(frameBody).append(html);
+					//editor.doc.execCommand('insertHTML',false,html);
+				}
 				
-		//to dragable
-		var x;
-		var y;
+				//to dragable
+				var x;
+				var y;
 
-		//mouse down event
-		//$(frameBody).on("mousedown","textarea",mdown);
-		$(frameBody).on("dblclick","textarea",mdown);
+				//mouse down event
+				//$(frameBody).on("mousedown","textarea",mdown);
+				$(frameBody).on("dblclick","textarea",mdown);
 
-		//fire when mouse down
-		function mdown(e) {
-			//get relative position
-			x = e.pageX - this.offsetLeft;
-			y = e.pageY - this.offsetTop;
+				//fire when mouse down
+				function mdown(e) {
+					//get relative position
+					x = e.pageX - this.offsetLeft;
+					y = e.pageY - this.offsetTop;
 
-			//move event
-			$(frameBody).on("mousemove","textarea",mmove);
-		}
+					//move event
+					$(frameBody).on("mousemove","textarea",mmove);
+				}
 
-		//fire when mouse move
-		function mmove(e) {
-			//prevent default event
-			e.preventDefault();
+				//fire when mouse move
+				function mmove(e) {
+					//prevent default event
+					e.preventDefault();
 
-			//trace mouse
-			$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
+					//trace mouse
+					$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
+					
+					//mouse up or mouse leave event
+					$(e.target).on("mouseup",mup);
+					$(frameBody).on("mouseleave","textarea",mup);
+				}
 
-			//mouse up or mouse leave event
-			$(e.target).on("mouseup",mup);
-			$(frameBody).on("mouseleave","textarea",mup);
-		}
+				//fire when mouse up
+				function mup(e) {
+					//remove event handler
+					$(frameBody).off("mousemove",mmove);
+					$(frameBody).off("mouseleave",mup);
+					$(e.target).off("mouseup",mup);
+				}
 
-		//fire when mouse up
-		function mup(e) {
-			//remove event handler
-			$(frameBody).off("mousemove",mmove);
-			$(frameBody).off("mouseleave",mup);
-			$(e.target).off("mouseup",mup);
-		}
-
-		//change icon
-		$(frameBody).on("dblclick","textarea",function(e){
-			$(e.target).css("cursor","move");
-		});
-
-		$(frameBody).on("mouseleave","textarea",function(e){
-			$(e.target).css("cursor","default");
-			$(frameBody).css("cursor","default");
-		});
+				//change icon
+				$(frameBody).on("dblclick","textarea",function(e){
+					$(e.target).css("cursor","move");
+				});
+				
+				$(frameBody).on("mouseleave","textarea",function(e){
+					$(e.target).css("cursor","default");
+					$(frameBody).css("cursor","default");
+				});
 
                 // Set focus
                 editor.focus();
