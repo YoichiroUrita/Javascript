@@ -10,6 +10,7 @@
  * Y.Urita 2018.12.5	ver.0.0.0
  * Y.Urita 2018.12.7    ver.0.0.1 fix error which occurred in ie11
  * Y.Urita 2018.12.16   ver.0.0.2 fit with scroll position in initial vertical direction
+ * Y.Urita 2018.12.17   ver.0.0.3 change position style absolute to relative
  ********************************************************************************************/
  
 (function ($) {
@@ -117,7 +118,7 @@
                 // Build the html
 				var frameBody=$(editor.$frame[0]).contents().find("body");
 				var scrTop=$(frameBody).scrollTop();
-                var html = "<textarea style='position:absolute;top:"+scrTop+"px;width:100px;height:20px;background-color:"
+                var html = "<textarea style='position:relative;top:"+scrTop+"px;width:100px;height:20px;background-color:"
 						+bgcolor+";'></textarea>";
 
                 // Insert the html
