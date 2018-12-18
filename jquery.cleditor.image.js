@@ -13,6 +13,7 @@
  * Y.Urita 2018.12.15   ver.0.0.3 enable to drag and drop image file in IE11
  * Y.Urita 2018.12.15   ver.0.1.0 images enable to drag and drop
  * Y.Urita 2018.12.18   ver.0.1.1 change position style absolute to relative. & organaize
+ * Y.Urita 2018.12.18   ver.0.1.2 bug fix for conflict in drag event with another element
  ********************************************************************************************/
  
 (function ($) {
@@ -203,7 +204,7 @@
 		if(window.navigator.userAgent.indexOf("rv:11")==-1)
 		{//chrome
 			//Event:drag start ---- pass to dataTransfer
-			cled.$frame.contents().find("body").on("dragstart",function(e)
+			cled.$frame.contents().find("body").on("dragstart","img",function(e)
 			{
 				if(e.originalEvent.dataTransfer.files.length!=0)
 				{//drag image file
@@ -215,7 +216,7 @@
 				}
 			});
 			
-			cled.$frame.contents().find("body").on("dragover",function(e)
+			cled.$frame.contents().find("body").on("dragover","img",function(e)
 			{
 				e.preventDefault();
 				if(e.originalEvent.dataTransfer.files.length==0)
@@ -225,7 +226,7 @@
 			});
 			
 			//Event:drop
-			cled.$frame.contents().on("drop",function(e)
+			cled.$frame.contents().on("drop","img",function(e)
 			{
 				e.preventDefault();
 				e.stopPropagation();
