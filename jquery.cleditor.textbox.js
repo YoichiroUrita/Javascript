@@ -141,13 +141,11 @@
 					isDrag=true;
 					if(ix=="" && iy=="")
 					{
-						console.log(e.target,$(e.target).css("left"),$(e.target).css("top"))
 						//get relative position
 						ix=$(e.target).css("left")!="auto" ? parseInt($(e.target).css("left")) : 0;
 						iy=$(e.target).css("top")!="auto" ? parseInt($(e.target).css("top")) : 0;
 						x = e.pageX - ix;
 						y = e.pageY - iy;
-						console.log(x,y);
 					}
 					//move event
 					$(frameBody).on("mousemove","textarea",mmove);
