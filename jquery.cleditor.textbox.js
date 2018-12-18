@@ -11,6 +11,7 @@
  * Y.Urita 2018.12.7    ver.0.0.1 fix error which occurred in ie11
  * Y.Urita 2018.12.16   ver.0.0.2 fit with scroll position in initial vertical direction
  * Y.Urita 2018.12.17   ver.0.0.3 change position style absolute to relative
+ * Y.Urita 2018.12.18   ver.0.0.4 bug fix for drag
  ********************************************************************************************/
  
 (function ($) {
@@ -118,7 +119,7 @@
                 // Build the html
 				var frameBody=$(editor.$frame[0]).contents().find("body");
 				var scrTop=$(frameBody).scrollTop();
-                var html = "<textarea style='position:relative;top:"+scrTop+"px;width:100px;height:20px;background-color:"
+                var html = "<textarea style='position:relative;top:"+scrTop+"px;left:0px;width:100px;height:20px;background-color:"
 						+bgcolor+";'></textarea>";
 
                 // Insert the html
@@ -129,34 +130,43 @@
 				}
 				
 				//to dragable
-				var x;
-				var y;
-
+				var x,y,ix="",iy="";
+				var isDrag=false;
 				//mouse down event
 				//$(frameBody).on("mousedown","textarea",mdown);
 				$(frameBody).on("dblclick","textarea",mdown);
 
 				//fire when mouse down
 				function mdown(e) {
-					//get relative position
-					x = e.pageX - this.offsetLeft;
-					y = e.pageY - this.offsetTop;
-
+					isDrag=true;
+					if(ix=="" && iy=="")
+					{
+						console.log(e.target,$(e.target).css("left"),$(e.target).css("top"))
+						//get relative position
+						ix=$(e.target).css("left")!="auto" ? parseInt($(e.target).css("left")) : 0;
+						iy=$(e.target).css("top")!="auto" ? parseInt($(e.target).css("top")) : 0;
+						x = e.pageX - ix;
+						y = e.pageY - iy;
+						console.log(x,y);
+					}
 					//move event
 					$(frameBody).on("mousemove","textarea",mmove);
 				}
 
 				//fire when mouse move
 				function mmove(e) {
-					//prevent default event
-					e.preventDefault();
+					if(isDrag==true)
+					{
+						//prevent default event
+						e.preventDefault();
 
-					//trace mouse
-					$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
-					
-					//mouse up or mouse leave event
-					$(e.target).on("mouseup",mup);
-					$(frameBody).on("mouseleave","textarea",mup);
+						//trace mouse
+						$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
+						
+						//mouse up or mouse leave event
+						$(e.target).on("mouseup",mup);
+						$(frameBody).on("mouseleave","textarea",mup);
+					}
 				}
 
 				//fire when mouse up
@@ -165,6 +175,8 @@
 					$(frameBody).off("mousemove",mmove);
 					$(frameBody).off("mouseleave",mup);
 					$(e.target).off("mouseup",mup);
+					isDrag=false;
+					ix=iy="";
 				}
 
 				//change icon
@@ -175,6 +187,14 @@
 				$(frameBody).on("mouseleave","textarea",function(e){
 					$(e.target).css("cursor","default");
 					$(frameBody).css("cursor","default");
+				});
+				
+				$(frameBody).on("click","textarea",function(e){
+					if(isDrag==false)
+					{
+						$(e.target).css("cursor","default");
+						$(frameBody).css("cursor","default");
+					}
 				});
 
                 // Set focus
