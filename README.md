@@ -125,5 +125,6 @@ Modify code
 <script src="jquery.cleditor.js"></script>
 <script src="jquery.cleditor.table.custom.js"></script>  //put after cleditor
 ```
-Note:IE11 display error dialog in usual drag operation.
-Click after double click (keep mouse-up), and mouse-move makes error dialog not display. -- temporary correspondence
+<s>Note:IE11 display error dialog in usual drag operation.
+Click after double click (keep mouse-up), and mouse-move makes error dialog not display. -- temporary correspondence</s><br>
+Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment. XD
