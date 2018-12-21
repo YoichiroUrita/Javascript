@@ -1,7 +1,7 @@
 # Javascript
 plug-in about javascript/jQuery<br>
 ***
-# jquery.cleditor.image.js<br>
+# <a href="jquery.cleditor.image.js">jquery.cleditor.image.js</a><br>
 <br>
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
@@ -44,7 +44,7 @@ $( id of same textarea as cleditor).cleditorXP();  //put after declaration of cl
 
 Well...M$, Thanks for reduce my weekend..so, 「敢えて言おう、カスであると！(If it is dare say you scum)」by Gihren Zabi
 ***
-# jquery.cleditor.textbox.js<br>
+# <a href="jquery.cleditor.textbox.js">jquery.cleditor.textbox.js</a><br>
 <br>
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
@@ -105,3 +105,25 @@ Modify code
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- jquery.cleditor.textbox.js<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- image<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>textbox.gif</em><br>
+
+# <a href="jquery.cleditor.table.custom.js">jquery.cleditor.table.custom.js</a><br>
+<br>
+
+![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
+<em> What is it? </em><br>
+
+ This is genuine plug-in for <a href="https://premiumsoftware.net/cleditor">jquery-cleditor</a>.
+- Custumize point <br>
+ Enable to drag. (Pseudo draggable)
+&nbsp;&nbsp;-> Double click on table turns drag mode on.
+
+![#008c15](https://placehold.it/15/008c15/000000?text=+)
+<em> How to use?</em><br>
+-- HTML
+
+```HTML
+<script src="jquery.cleditor.js"></script>
+<script src="jquery.cleditor.table.custom.js"></script>  //put after cleditor
+```
+Note:IE11 display error dialog in usual drag operation.
+Click after double click (keep mouse-up), and mouse-move makes error dialog not display. -- temporary correspondence
