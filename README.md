@@ -127,4 +127,4 @@ Modify code
 ```
 <s>Note:IE11 display error dialog in usual drag operation.
 Click after double click (keep mouse-up), and mouse-move makes error dialog not display. -- temporary correspondence</s><br>
-Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment. XD
+Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment. -- Still unstable. Error occurs rarely. XD
