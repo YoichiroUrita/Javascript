@@ -105,7 +105,7 @@ Modify code
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- jquery.cleditor.textbox.js<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- image<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>textbox.gif</em><br>
-
+***
 # <a href="jquery.cleditor.table.custom.js">jquery.cleditor.table.custom.js</a><br>
 <br>
 
