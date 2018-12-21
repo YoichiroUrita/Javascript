@@ -89,8 +89,6 @@
 						iy=$(e.target).closest("table").css("top")!="auto" ? parseInt($(e.target).closest("table").css("top")) : 0;
 						x = e.pageX - ix;
 						y = e.pageY - iy;
-						//to prevent display error dialog
-						if(window.navigator.userAgent.indexOf("rv:11")!=-1)$(frameBody).trigger('mouseup');
 					}
 					//move event
 					$(frameBody).on("mousemove",".divTable",tmove);
@@ -103,7 +101,10 @@
 					{
 						//prevent default event
 						e.preventDefault();
-					
+						
+						//to prevent display error dialog in ie11
+						if(window.navigator.userAgent.indexOf("rv:11")!=-1)$(obj).trigger('mouseup');
+						
 						//trace mouse
 						$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
 						
