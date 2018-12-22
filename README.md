@@ -112,14 +112,18 @@ Modify code
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <em> What is it? </em><br>
 
- This is genuine plug-in for <a href="https://premiumsoftware.net/cleditor">jquery-cleditor</a>.
+ The original file is genuine plug-in for <a href="https://premiumsoftware.net/cleditor">jquery-cleditor</a>.
 - Custumize point <br>
- Enable to drag. (Pseudo draggable)
+
+1)Enable to drag. (Pseudo draggable)<br>
 &nbsp;&nbsp;-> Double click on table turns drag mode on.
+
+2)Enable insert rows and columns<br>
+&nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
 
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
 <em> How to use?</em><br>
--- HTML
+- HTML
 
 ```HTML
 <script src="jquery.cleditor.js"></script>
@@ -127,4 +131,12 @@ Modify code
 ```
 <s>Note:IE11 display error dialog in usual drag operation.
 Click after double click (keep mouse-up), and mouse-move makes error dialog not display. -- temporary correspondence</s><br>
-Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment. -- Still unstable. Error occurs rarely. XD
+<s>Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment.</s> -- Still unstable. Error occurs rarely. XD
+
+- Image file <br>
+  put textbox.gif on image folder as below.<br>
+  
+\------ jquery.cleditor.js<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- jquery.cleditor.textbox.js<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- image<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>insertrowcol.gif</em><br>
