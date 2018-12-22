@@ -7,6 +7,7 @@
  Dual licensed under the MIT or GPL Version 2 licenses.
 */
 //modify by Y.Urita 2018.12.21 draggable table
+//modify by Y.Urita 2018.12.22 insert rows and column
 
 (function ($) {
 
