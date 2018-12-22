@@ -19,14 +19,31 @@
         popupName: "table",
         popupClass: "cleditorPrompt",
         popupContent:
-            '<label>列:<input type="text" value="4" style="width:40px"></label>&nbsp;&nbsp;' +
-            '<label>行:<input type="text" value="4" style="width:40px"></label>' +
+            '<label>列:<input type="text" value="4" style="width:40px"></label>&nbsp;&nbsp;' +//columns
+            '<label>行:<input type="text" value="4" style="width:40px"></label>' +//rows
             '<br /><input type="button" value="Submit">',
         buttonClick: tableButtonClick
     };
+	// Define the table style button
+    $.cleditor.buttons.insertrowcol = {
+        name: "insertrowcol",
+        image: "insertrowcol.gif",
+        title: "行列の挿入",//"Insert Rows and Columns", //Replace Japanese to English, if you want.
+        command: "inserthtml",
+        popupName: "insertrowcol",
+        popupClass: "cleditorPrompt",
+        popupContent:
+			'<label><input type="radio" value="front" name="insertFR">前に挿入</label>'+//insert in front of element
+			'<label><input type="radio" value="rear" name="insertFR">後に挿入</label><br>'+//insert in rear of element'
+            '<label><input type="text" class="insertRC" value="0" style="width:40px">列を挿入</label>&nbsp;&nbsp;' +//insert columns
+            '<label><input type="text" class="insertRC" value="0" style="width:40px">行を挿入</label>' +//insert rows
+            '<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
+			'<br /><input type="button" value="Submit">',
+        buttonClick: insertrowcolButtonClick
+    };
     // Add the button to the default controls
     $.cleditor.defaultOptions.controls = $.cleditor.defaultOptions.controls
-        .replace("rule ", "rule table ");
+        .replace("rule ", "rule table insertrowcol ");
 
     // Table button click event handler
     function tableButtonClick(e, data) {
@@ -73,7 +90,7 @@
 				//fire when mouse down
 				function tdown(e) {
 					isDrag=true;
-					if(ix=="" && iy=="")
+					if(ix=="" && iy=="" )//&& isDrag==false)
 					{
 						obj=this;
 						var divX=$(e.target).closest("table").offset().left;
@@ -155,5 +172,110 @@
           });
 
     }
+	
+    // Table button click event handler
+    function insertrowcolButtonClick(e, data) {
 
+        // Wire up the submit button click event handler
+        $(data.popup).children(":button")
+            .off("click")
+            .on("click", function (e) {
+
+                // Get the editor
+                var editor = data.editor;
+				
+				// Get insert position
+				var radi=$(data.popup).find("input[name='insertFR']:checked");
+				
+                // Get the column and row count
+                var $text = $(data.popup).find(":text"),
+                    cols = parseInt($text[0].value),
+                    rows = parseInt($text[1].value);
+				
+				//Click event
+				var frameBody=$(editor.$frame[0]).contents().find("body");
+				$($(editor.$frame[0]).contents()).on("click",function(e)
+				{
+					if($(e.target).closest("table").length==1)
+					{
+						var html;
+						//insert columns part
+						if(cols>0)
+						{
+							html="<td style='"+$(e.target).attr("style")+";min-width:2em'></td>";
+							
+							//Get current column index
+							var c=parseInt($(e.target).closest("tr").children().index(e.target));
+							
+							//loop each tr
+							var targetTable=$(e.target).closest("table");
+							
+							$(targetTable).find("tr").each(function(idx,elem)
+							{
+								if($(radi).val()==="front")
+								{//front
+									//insert columns
+									for(var i=0;i<cols;i++)
+									{									
+										$(elem).find("td:nth-child("+(1+c)+")").before(html);
+									}
+								}
+								else
+								{//rear
+									//insert columns
+									for(var i=0;i<cols;i++)
+									{
+										$(elem).find("td:nth-child("+(1+c)+")").after(html);
+									}
+								}	
+							});
+						}
+						
+						//insert rows part
+						if(rows>0)
+						{
+							//Get current row
+							var thisTr=$(e.target).closest("tr");
+							var r=parseInt($(thisTr).closest("table").find("tr").index());
+							
+							//Get column number
+							var cs=$(thisTr).find("td").length;
+							html="<tr style='"+$(thisTr).attr("style")+"'>";
+							$(thisTr).find("td").each(function(idx,elem)
+							{
+								html+="<td style='"+$(elem).attr("style")+";min-height:1em'></td>";
+							});
+							html+="</tr>";
+							
+							if($(radi).val()==="front")
+							{//front
+								//insert columns
+								for(var i=0;i<rows;i++)
+								{
+									$(thisTr).before(html);
+								}
+							}
+							else
+							{//rear
+								//insert columns
+								for(var i=0;i<rows;i++)
+								{
+									$(thisTr).after(html);
+								}
+							}
+						}
+						
+					}
+					//off event -- cancel when click except table (include td)
+					$($(editor.$frame[0]).contents()).off("click");
+				});
+				
+				// Reset the text, hide the popup and set focus
+                $text.val("0");
+                editor.hidePopups();
+                editor.focus();
+				
+			});
+	}			
 })(jQuery);
+
