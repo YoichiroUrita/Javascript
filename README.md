@@ -118,7 +118,10 @@ Modify code
 1)Enable to drag. (Pseudo draggable)<br>
 &nbsp;&nbsp;-> Double click on table turns drag mode on.
 
-2)Enable insert rows and columns<br>
+2)Enable to insert rows and columns<br>
+&nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
+
+3)Enable to resize cell<br>
 &nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
 
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
@@ -140,3 +143,4 @@ Click after double click (keep mouse-up), and mouse-move makes error dialog not 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- jquery.cleditor.textbox.js<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- image<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>insertrowcol.gif</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>resizecell.gif</em><br>
