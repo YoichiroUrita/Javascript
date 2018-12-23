@@ -6,8 +6,9 @@
  Copyright 2010, Chris Landowski, Premium Software, LLC
  Dual licensed under the MIT or GPL Version 2 licenses.
 */
-//modify by Y.Urita 2018.12.21 draggable table
-//modify by Y.Urita 2018.12.22 insert rows and column
+//modify by Y.Urita 2018.12.21 enable to drag table
+//modify by Y.Urita 2018.12.22 enable to insert rows and column
+//modify by Y.Urita 2018.12.23 eneble to resize cell
 
 (function ($) {
 
@@ -42,9 +43,25 @@
 			'<br /><input type="button" value="Submit">',
         buttonClick: insertrowcolButtonClick
     };
+		// Define the table style button
+    $.cleditor.buttons.resizecell = {
+        name: "resizecell",
+        image: "resizecell.gif",
+        title: "セルの幅と高さ",//"Resize width and height of cell", //Replace Japanese to English, if you want.
+        command: "inserthtml",
+        popupName: "resizecell",
+        popupClass: "cleditorPrompt",
+        popupContent:
+			'変更しない場合は0<br>'+//0 is no change
+            '<label>幅<input type="text" class="insertRC" value="0" style="width:40px">px</label>&nbsp;&nbsp;' +//width
+            '<label>高さ<input type="text" class="insertRC" value="0" style="width:40px">px</label>' +//height
+            '<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
+			'<br /><input type="button" value="Submit">',
+        buttonClick: resizecellButtonClick
+    };
     // Add the button to the default controls
     $.cleditor.defaultOptions.controls = $.cleditor.defaultOptions.controls
-        .replace("rule ", "rule table insertrowcol ");
+        .replace("rule ", "rule table insertrowcol resizecell ");
 
     // Table button click event handler
     function tableButtonClick(e, data) {
@@ -174,7 +191,7 @@
 
     }
 	
-    // Table button click event handler
+	// Table button click event handler
     function insertrowcolButtonClick(e, data) {
 
         // Wire up the submit button click event handler
@@ -277,6 +294,51 @@
                 editor.focus();
 				
 			});
+	}
+	
+	// Table button click event handler
+    function resizecellButtonClick(e, data) {
+
+        // Wire up the submit button click event handler
+        $(data.popup).children(":button")
+            .off("click")
+            .on("click", function (e) {
+
+                // Get the editor
+                var editor = data.editor;
+				
+                // Get the column and row count
+                var $text = $(data.popup).find(":text"),
+                    wid = parseInt($text[0].value),
+                    hei = parseInt($text[1].value);
+				
+				//Click event
+				
+				$($(editor.$frame[0]).contents()).on("click",function(e)
+				{
+					if($(e.target).is("td"))
+					{
+						//change width size
+						if(wid>0)
+						{
+							$(e.target).css("min-width",wid+"px");
+						}
+						//change height size
+						if(hei>0)
+						{
+							//$(e.target).css("min-height",hei+"px");
+							$(e.target).css("height",hei+"px");
+						}
+					}
+					//off event -- cancel when click except table (include td)
+					$($(editor.$frame[0]).contents()).off("click");
+				});
+				
+				// Reset the text, hide the popup and set focus
+                $text.val("0");
+                editor.hidePopups();
+                editor.focus();
+				
+			});
 	}			
 })(jQuery);
-
