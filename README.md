@@ -137,7 +137,7 @@ Click after double click (keep mouse-up), and mouse-move makes error dialog not 
 <s>Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment.</s> -- Still unstable. Error occurs rarely. XD
 
 - Image file <br>
-  put textbox.gif on image folder as below.<br>
+  put icon files on image folder as below.<br>
   
 \------ jquery.cleditor.js<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- jquery.cleditor.textbox.js<br>
