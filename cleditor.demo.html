@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" type="text/css" href="/js/jquery.cleditor.css" />
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
+  <script type="text/javascript" src="jquery.cleditor.custom.js"></script>
+	<script type="text/javascript" src="jquery.cleditor.table.custom.js"></script>
+	<script type="text/javascript" src="jquery.cleditor.image.js"></script>
+	<script type="text/javascript" src="jquery.cleditor.textbox.js"></script>
+  <title>Cleditor's DEMO</tilte>
+</head>
+<body>
+
+	<textarea id="inp_RichText" name="Text" style="width:400px;height:300px">
+	</textarea>
+<script>
+$(document).ready(function() { 
+	
+	$("#inp_RichText").cleditor();
+	
+	$("#inp_RichText").cleditorXP();
+	
+	//focus
+	$("#inp_RichText").cleditor()[0].focus();
+});
+</script>
+</body>
+</html>
