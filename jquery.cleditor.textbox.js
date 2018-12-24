@@ -12,6 +12,7 @@
  * Y.Urita 2018.12.16   ver.0.0.2 fit with scroll position in initial vertical direction
  * Y.Urita 2018.12.17   ver.0.0.3 change position style absolute to relative
  * Y.Urita 2018.12.18   ver.0.0.4 bug fix for drag
+ * Y.Urita 2018.12.24   ver.0.0.5 hide popup window after color picked
  ********************************************************************************************/
  
 (function ($) {
@@ -120,7 +121,7 @@
 				var frameBody=$(editor.$frame[0]).contents().find("body");
 				var scrTop=$(frameBody).scrollTop();
                 var html = "<textarea style='position:relative;top:"+scrTop+"px;left:0px;width:100px;height:20px;background-color:"
-						+bgcolor+";'></textarea>";
+						+bgcolor+";'></textarea>&#10;";
 
                 // Insert the html
                 if (html)
@@ -133,7 +134,6 @@
 				var x,y,ix="",iy="";
 				var isDrag=false;
 				//mouse down event
-				//$(frameBody).on("mousedown","textarea",mdown);
 				$(frameBody).on("dblclick","textarea",mdown);
 
 				//fire when mouse down
@@ -194,7 +194,7 @@
 						$(frameBody).css("cursor","default");
 					}
 				});
-
+				editor.hidePopups();
                 // Set focus
                 editor.focus();
 
