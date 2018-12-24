@@ -6,9 +6,10 @@
  Copyright 2010, Chris Landowski, Premium Software, LLC
  Dual licensed under the MIT or GPL Version 2 licenses.
 */
-//modify by Y.Urita 2018.12.21 enable to drag table
-//modify by Y.Urita 2018.12.22 enable to insert rows and column
-//modify by Y.Urita 2018.12.23 eneble to resize cell
+//modified by Y.Urita 2018.12.21 enable to drag table
+//modified by Y.Urita 2018.12.22 enable to insert rows and column
+//modified by Y.Urita 2018.12.23 eneble to resize cell
+//modified by Y.Urita 2018.12.24 enable to change border style
 
 (function ($) {
 
@@ -26,7 +27,7 @@
             '<br /><input type="button" value="Submit">',
         buttonClick: tableButtonClick
     };
-	// Define the table style button
+	// Define the insert row and columns button
     $.cleditor.buttons.insertrowcol = {
         name: "insertrowcol",
         image: "insertrowcol.gif",
@@ -35,7 +36,7 @@
         popupName: "insertrowcol",
         popupClass: "cleditorPrompt",
         popupContent:
-			'<label><input type="radio" value="front" name="insertFR">前に挿入</label>'+//insert in front of element
+			'<label><input type="radio" value="front" name="insertFR" checked>前に挿入</label>'+//insert in front of element
 			'<label><input type="radio" value="rear" name="insertFR">後に挿入</label><br>'+//insert in rear of element'
             '<label><input type="text" class="insertRC" value="0" style="width:40px">列を挿入</label>&nbsp;&nbsp;' +//insert columns
             '<label><input type="text" class="insertRC" value="0" style="width:40px">行を挿入</label>' +//insert rows
@@ -43,7 +44,7 @@
 			'<br /><input type="button" value="Submit">',
         buttonClick: insertrowcolButtonClick
     };
-		// Define the table style button
+	// Define the resize cell button
     $.cleditor.buttons.resizecell = {
         name: "resizecell",
         image: "resizecell.gif",
@@ -53,15 +54,121 @@
         popupClass: "cleditorPrompt",
         popupContent:
 			'変更しない場合は0<br>'+//0 is no change
-            '<label>幅<input type="text" class="insertRC" value="0" style="width:40px">px</label>&nbsp;&nbsp;' +//width
-            '<label>高さ<input type="text" class="insertRC" value="0" style="width:40px">px</label>' +//height
+            '<label>幅<input type="text" class="resizeWH" value="0" style="width:40px">px</label>&nbsp;&nbsp;' +//width
+            '<label>高さ<input type="text" class="resizeWH" value="0" style="width:40px">px</label>' +//height
             '<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
 			'<br /><input type="button" value="Submit">',
         buttonClick: resizecellButtonClick
     };
+	// Define the table border style button
+    $.cleditor.buttons.borderstyle = {
+        name: "borderstyle",
+        image: "borderstyle.gif",
+        title: "セルの枠線",//"border style of cell", //Replace Japanese to English, if you want.
+        command: "inserthtml",
+        popupName: "borderstyle",
+        popupClass: "cleditorPrompt",
+        popupContent:
+			'<label><input type="checkbox" name="bordertop" value="border-top" checked>上</label>&nbsp;&nbsp;'+//top
+			'<label><input type="checkbox" name="borderleft" value="border-left" checked>左</label>&nbsp;&nbsp;'+//left
+			'<label><input type="checkbox" name="borderright" value="border-right" checked>右</label>&nbsp;&nbsp;'+//right
+			'<label><input type="checkbox" name="borderbottom" value="border-bottom" checked>下</label><br>'+//bottom
+			'<label style="display:block">Sample<hr class="bordersample" style="display:inline-block;border-style:solid;border-width:0px;border-top-width:1px;border-color:black;width:50px"></label>' +
+            '<label>線種<select class="borderStyle" onchange="$(\'.bordersample\').css(\'border-style\',$(this).val())"><br>' +//line type
+			'<option value="solid" selected>実線</option>' +//solid
+			'<option value="dotted">点線</option>' +//dotted
+			'<option value="dashed">破線</option>' +//dashed
+			'<option value="double">二重線</option>' +//double
+			
+			'</select></label>' +
+            '<label>太さ<select class="borderWidth"  onchange="$(\'.bordersample\').css(\'border-top-width\',$(this).val())">' +//line width
+			'<option value="1px" selected>1px</option>' +
+			'<option value="2px">2px</option>' +
+			'<option value="3px">3px</option>' +
+			'<option value="4px">4px</option>' +
+			'<option value="6px">6px</option>' +
+			'</select></label><br>' + 
+			
+			'<div style="width:150px;height:105px;background-color:white;margin-left:auto;margin-right:auto">' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 255, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 204, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 102, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 255, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(187, 187, 187);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 255, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 204, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 102, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 204, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 102, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 51, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 153, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 153, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 153, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 0, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 51, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 102, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 102, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 51, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 51);margin:0 1px 1px 0;"></div>' +
+			'</div>'+
+
+            '<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
+			'<br /><input type="button" value="Submit">',
+        buttonClick: borderstyleButtonClick
+    };
     // Add the button to the default controls
     $.cleditor.defaultOptions.controls = $.cleditor.defaultOptions.controls
-        .replace("rule ", "rule table insertrowcol resizecell ");
+        .replace("rule ", "rule table insertrowcol resizecell borderstyle ");
 
     // Table button click event handler
     function tableButtonClick(e, data) {
@@ -82,14 +189,14 @@
                 // Build the html
                 var html;
                 if (cols > 0 && rows > 0) {
-					html="<table style='border-collapse:collapse;border:1px solid black;background-color:white;position:relative;top:0px;left:0px'>";
+					html="<table style='border-collapse:collapse;border:1px solid black;background-color:white;position:relative;top:0px;left:0px'>&#10;";
                     for (y = 0; y < rows; y++) {
-                        html += "<tr>";
+                        html += "&#09;<tr>";
                         for (x = 0; x < cols; x++)
                             html += "<td style='border:1px solid black'>" + x + "," + y + "</td>";
-                        html += "</tr>";
+                        html += "</tr>&#10;";
                     }
-                    html += "</table><br />";
+                    html += "</table>&#10;<br />&#10;";
                 } 
 
                 // Insert the html
@@ -258,12 +365,12 @@
 							
 							//Get column number
 							var cs=$(thisTr).find("td").length;
-							html="<tr style='"+$(thisTr).attr("style")+"'>";
+							html="&#09;<tr style='"+$(thisTr).attr("style")+"'>";
 							$(thisTr).find("td").each(function(idx,elem)
 							{
 								html+="<td style='"+$(elem).attr("style")+";min-height:1em'></td>";
 							});
-							html+="</tr>";
+							html+="</tr>&#10;";
 							
 							if($(radi).val()==="front")
 							{//front
@@ -322,13 +429,16 @@
 						if(wid>0)
 						{
 							$(e.target).css("min-width",wid+"px");
+							editor.updateTextArea();//update iframe
 						}
 						//change height size
 						if(hei>0)
 						{
 							//$(e.target).css("min-height",hei+"px");
 							$(e.target).css("height",hei+"px");
+							editor.updateTextArea();//update iframe
 						}
+						
 					}
 					//off event -- cancel when click except table (include td)
 					$($(editor.$frame[0]).contents()).off("click");
@@ -340,5 +450,55 @@
                 editor.focus();
 				
 			});
-	}			
+	}	
+
+	// Table button click event handler
+    function borderstyleButtonClick(e, data) {
+		// Get the editor
+        var editor = data.editor;
+		var borderColor=$(data.popup).find(".bordersample").css("border-color");
+		
+		//Get clicked color code 
+		$(data.popup).find(".colorpicker")
+            .off("click")
+            .on("click", function (e) {
+				
+				// Get the column and row count
+				borderColor=$(e.target).css("background-color");
+				
+				$(".bordersample").css("border-color",borderColor);
+			});
+				
+        // Wire up the submit button click event handler
+        $(data.popup).children(":button")
+            .off("click")
+            .on("click", function (e) {
+
+                // Get the editor
+                var editor = data.editor;
+
+                // Get the which positions are change
+                var cb = $(data.popup).find("input[type=checkbox]"),
+					sl = $(data.popup).find("select");
+				
+				$($(editor.$frame[0]).contents()).on("click",function(e)
+				{
+					if($(e.target).is("td"))
+					{
+						var	baseStyle=$(sl[0]).val()+" "+$(sl[1]).val()+" "+borderColor;
+						
+						$(cb).each(function(idx,item){
+							if($(item).prop("checked")==true)
+								$(e.target).css($(item).val(),baseStyle);
+						});	
+						editor.updateTextArea();//update iframe
+					}
+					//off event -- cancel when click except table (include td)
+					$($(editor.$frame[0]).contents()).off("click");
+				});
+				editor.hidePopups();
+                editor.focus();
+			});
+	}
+	
 })(jQuery);
