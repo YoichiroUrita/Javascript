@@ -163,7 +163,7 @@
 							var scrTop=cled.$frame.contents().find("body").scrollTop();
 							cled.$frame.contents().find("body")
 								.append('<img style="position:relative;top:'+scrTop
-								+'px;zoom:1.0" src="'+Canvas[0].toDataURL('image/png')+'">');
+								+'px;zoom:1.0" src="'+Canvas[0].toDataURL('image/png')+'">&#10;');
 							
 							var curHtml=cled.$frame.contents().find("body").html();
 							cled.$area.val(curHtml);//write textarea
@@ -245,7 +245,7 @@
 						var scrTop=cled.$frame.contents().find("body").scrollTop();
 						cled.$frame.contents().find("body")
 									.append('<img style="position:relative;top:'+scrTop
-									+'px;left:0px;zoom:1.0" src="'+file_reader.result+'">');
+									+'px;left:0px;zoom:1.0" src="'+file_reader.result+'">&#10;');
 						var currentHtml=cled.$frame.contents().find("body").html();
 						cled.$area.val(currentHtml);//writting textarea
 						cled.updateTextArea();//update iframe
