@@ -124,6 +124,9 @@ Modify code
 3)Enable to resize cell<br>
 &nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
 
+4)Enable to change border style<br>
+&nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
+
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
 <em> How to use?</em><br>
 - HTML
@@ -144,3 +147,4 @@ Click after double click (keep mouse-up), and mouse-move makes error dialog not 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- image<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>insertrowcol.gif</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>resizecell.gif</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>borderstyle.gif</em><br>
