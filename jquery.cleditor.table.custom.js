@@ -550,6 +550,61 @@
 				editor.hidePopups();
                 editor.focus();
 			});
+			
+		//Drag and Drop
+		var draggingFile;
+		if(window.navigator.userAgent.indexOf("rv:11")==-1)
+		{//chrome
+			//Event:drag start ---- pass to dataTransfer
+			$("body").on("dragstart",$(data.popup).find(".colorpicker"),function(e)
+			{
+				if(e.originalEvent.dataTransfer.files.length!=0)
+				{//drag image file
+					draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
+				}
+			});
+			
+			$("body").on("dragover",$(data.popup).find(".colorpicker"),function(e)
+			{
+				e.preventDefault();
+			});
+			
+			//Event:drop
+			$(document).on("drop",".colorpicker",function(e)
+			{
+				e.preventDefault();
+				e.stopPropagation();
+				if(e.originalEvent.dataTransfer.files.length!=0)
+				{
+					//get from dataTransfer
+					var file=e.originalEvent.dataTransfer.files[0];
+					var file_reader = new FileReader();//API
+					
+					//ater file read
+					file_reader.onloadend = function(e){
+
+						// when error occur
+						if(file_reader.error) return;
+						
+						//Apply the image to cell
+						$($(editor.$frame[0]).contents()).on("click",function(e)
+						{
+							if($(e.target).is("td"))
+							{
+								$(e.target).css("background-image","url('"+file_reader.result+"')");
+								
+								editor.updateTextArea();//update iframe
+							}
+							//off event -- cancel when click except table (include td)
+							$($(editor.$frame[0]).contents()).off("click");
+						});
+						editor.hidePopups();
+						editor.focus();
+					}
+					file_reader.readAsDataURL(file);
+				}
+			});
+		}
 	}
 	
 })(jQuery);
