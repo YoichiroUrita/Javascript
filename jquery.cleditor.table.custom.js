@@ -10,8 +10,82 @@
 //modified by Y.Urita 2018.12.22 enable to insert rows and column
 //modified by Y.Urita 2018.12.23 eneble to resize cell
 //modified by Y.Urita 2018.12.24 enable to change border style
+//modified by Y.Urita 2018.12.25 enable to change color of cell, bug fix in drag  //[ie11] faint table when add new table.
 
 (function ($) {
+
+	var colorPickerHtml = 
+	'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 255, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 204, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 102, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 255, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 255, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(187, 187, 187);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 255, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 204, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 102, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 204, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 204, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 102, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 51, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 153, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 153, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 153, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 255);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 0, 204);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 51, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 102, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 102, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 102, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 51, 0);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 51, 51);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 102);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 153);margin:0 1px 1px 0;"></div>' +
+			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 51);margin:0 1px 1px 0;"></div>'+
+			'<div class="colorpicker" style="text-align:center;width:140px;height:14px;background-color:transparent">Transparent</div>';
 
     // Define the table button
     $.cleditor.buttons.table = {
@@ -89,86 +163,29 @@
 			'<option value="6px">6px</option>' +
 			'</select></label><br>' + 
 			
-			'<div style="width:150px;height:105px;background-color:white;margin-left:auto;margin-right:auto">' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 255, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 255, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 255, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 204, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 204, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 102, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 255, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 255, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 255, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(187, 187, 187);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 0, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 153, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 255, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 255, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 204, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 204, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 102, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 0, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 102, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(255, 204, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 204, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 204, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 102, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 51, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 0, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 102, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(204, 153, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 153, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 153, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 153, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 255);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 0, 204);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 51, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 0, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 51, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(153, 102, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 102, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 102, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 102, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(102, 51, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 51, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 51, 0);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 51, 51);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(0, 0, 102);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 153);margin:0 1px 1px 0;"></div>' +
-			'<div class="colorpicker" style="float:left;width:14px;height:14px;margin:0;background-color: rgb(51, 0, 51);margin:0 1px 1px 0;"></div>' +
-			'</div>'+
+			'<div style="width:150px;height:120px;background-color:white;margin-left:auto;margin-right:auto">' +
+			colorPickerHtml+'</div>'+
 
             '<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
 			'<br /><input type="button" value="Submit">',
         buttonClick: borderstyleButtonClick
     };
+	// Define the table border style button
+    $.cleditor.buttons.cellcolor = {
+        name: "cellcolor",
+        image: "cellcolor.gif",
+        title: "セルの背景色",//"background color of cell", //Replace Japanese to English, if you want.
+        command: "inserthtml",
+        popupName: "cellcolor",
+        popupClass: "cleditorPrompt",
+        popupContent:
+			'<div style="width:150px;height:120px;background-color:white;">' +
+			colorPickerHtml+'</div>',
+        buttonClick: cellcolorButtonClick
+    };
     // Add the button to the default controls
     $.cleditor.defaultOptions.controls = $.cleditor.defaultOptions.controls
-        .replace("rule ", "rule table insertrowcol resizecell borderstyle ");
+        .replace("rule ", "rule table insertrowcol resizecell borderstyle cellcolor ");
 
     // Table button click event handler
     function tableButtonClick(e, data) {
@@ -193,7 +210,7 @@
                     for (y = 0; y < rows; y++) {
                         html += "&#09;<tr>";
                         for (x = 0; x < cols; x++)
-                            html += "<td style='border:1px solid black'>" + x + "," + y + "</td>";
+                            html += "<td style='border:1px solid black;min-width:30px;height:15px'></td>";
                         html += "</tr>&#10;";
                     }
                     html += "</table>&#10;<br />&#10;";
@@ -204,33 +221,34 @@
                     editor.execCommand(data.command, html, null, data.button);
 
 				//to dragable
-				var x,y,ix="",iy="";
+				var x,y,ix="",iy="",divX,divY,eX,eY;
 				
 				var isDrag=false;
 				var obj;
 				//mouse down event
 				var frameBody=$(editor.$frame[0]).contents().find("body");
-				$(frameBody).on("dblclick","table",tdown);
+				$(frameBody).off("dblclick").on("dblclick","table",tdown);
 
 				//fire when mouse down
 				function tdown(e) {
 					isDrag=true;
-					if(ix=="" && iy=="" )//&& isDrag==false)
+					if(ix=="" || iy=="" )//&& isDrag==false)
 					{
-						obj=this;
-						var divX=$(e.target).closest("table").offset().left;
-						var divY=$(e.target).closest("table").offset().top;
-						var divW=$(e.target).closest("table").width();
-						var divH=$(e.target).closest("table").height();
+						obj=$(this).is("table") ? this : $(this).closest("table");
+						divX=$(obj).offset().left;
+						divY=$(obj).offset().top;
+						var divW=$(obj).width();
+						var divH=$(obj).height();
 						var html="<div class='divTable' style='position:absolute;top:"+divY+"px;left:"+divX+"px;width:"
 							+divW+"px;height:"+divH+"px;border:2px solid blue;opacity:0.6;background-color:blue'></div>";
 						$(frameBody).append(html);
 						
 						//get relative position
-						ix=$(e.target).closest("table").css("left")!="auto" ? parseInt($(e.target).closest("table").css("left")) : 0;
-						iy=$(e.target).closest("table").css("top")!="auto" ? parseInt($(e.target).closest("table").css("top")) : 0;
-						x = e.pageX - ix;
-						y = e.pageY - iy;
+						ix=$(obj).css("left")!="auto" ? parseInt($(obj).css("left")) : 0;
+						iy=$(obj).css("top")!="auto" ? parseInt($(obj).css("top")) : 0;
+						x = e.pageX;
+						y = e.pageY;
+						
 					}
 					//move event
 					$(frameBody).on("mousemove",".divTable",tmove);
@@ -248,43 +266,49 @@
 						if(window.navigator.userAgent.indexOf("rv:11")!=-1)$(obj).trigger('mouseup');
 						
 						//trace mouse
-						$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
+						$(this).css({"top":e.pageY - y + divY +"px","left":e.pageX - x  + divX + "px"});
+						eX=e.pageX;
+						eY=e.pageY;
 						
 						//mouse up or mouse leave event
-						$(e.target).on("mouseup",tup);
+						$(this).on("mouseup",tup);
 						$(frameBody).on("mouseleave",".divTable",tup);
 					}
 				}
 
 				//fire when mouse up
 				function tup(e) {
-					//remove event handler
-					$(frameBody).off("mousemove",tmove);
-					$(frameBody).off("mouseleave",tup);
-					$(e.target).off("mouseup",tup);
-					isDrag=false;
-					$(obj).css({"left":$(this).offset().left+"px","top":$(this).offset().top});
-					
-					ix=iy="";
-					setTimeout(function(){
-						$(frameBody).find(".divTable").remove();
-					},10);
+					if(isDrag==true)
+					{
+						//remove event handler
+						$(frameBody).off("mousemove",tmove);
+						$(frameBody).off("mouseleave",tup);
+						$(this).off("mouseup",tup);
+						isDrag=false;
+						$(obj).css({"left":eX-x+ix+"px","top":eY-y+iy+"px"});
+						
+						ix=iy="";
+						setTimeout(function(){
+							$(frameBody).find(".divTable").remove();
+							editor.updateTextArea();//update iframe
+						},10);
+					}
 				}
 
 				//change icon
 				$(frameBody).on("dblclick","table",function(e){
-					$(e.target).css("cursor","move");
+					$(this).css("cursor","move");
 				});
 				
 				$(frameBody).on("mouseleave","table",function(e){
-					$(e.target).css("cursor","default");
+					$(this).css("cursor","default");
 					$(frameBody).css("cursor","default");
 				});
 				
 				$(frameBody).on("click","table",function(e){
 					if(isDrag==false)
 					{
-						$(e.target).css("cursor","default");
+						$(this).css("cursor","default");
 						$(frameBody).css("cursor","default");
 					}
 				});
@@ -463,7 +487,7 @@
             .off("click")
             .on("click", function (e) {
 				
-				// Get the column and row count
+				// Get the border color from color picker
 				borderColor=$(e.target).css("background-color");
 				
 				$(".bordersample").css("border-color",borderColor);
@@ -473,9 +497,6 @@
         $(data.popup).children(":button")
             .off("click")
             .on("click", function (e) {
-
-                // Get the editor
-                var editor = data.editor;
 
                 // Get the which positions are change
                 var cb = $(data.popup).find("input[type=checkbox]"),
@@ -491,6 +512,36 @@
 							if($(item).prop("checked")==true)
 								$(e.target).css($(item).val(),baseStyle);
 						});	
+						editor.updateTextArea();//update iframe
+					}
+					//off event -- cancel when click except table (include td)
+					$($(editor.$frame[0]).contents()).off("click");
+				});
+				editor.hidePopups();
+                editor.focus();
+			});
+	}
+	
+	// Table button click event handler
+    function cellcolorButtonClick(e, data) {
+		// Get the editor
+        var editor = data.editor;
+		
+		//Get clicked color code 
+		$(data.popup).find(".colorpicker")
+            .off("click")
+            .on("click", function (e) {
+
+				//Get the background-color from color picker
+				var cellColor=$(e.target).css("background-color");
+				
+				//Apply the color to cell
+				$($(editor.$frame[0]).contents()).on("click",function(e)
+				{
+					if($(e.target).is("td"))
+					{
+						$(e.target).css("background-color",cellColor);
+						
 						editor.updateTextArea();//update iframe
 					}
 					//off event -- cancel when click except table (include td)
