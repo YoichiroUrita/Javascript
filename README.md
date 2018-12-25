@@ -116,7 +116,7 @@ Modify code
 - Custumize point <br>
 
 1)Enable to drag. (Pseudo draggable)<br>
-&nbsp;&nbsp;-> Double click on table turns drag mode on.
+&nbsp;&nbsp;-> Double click on table turns drag mode on. Mouse up (or single click) turns drag mode off.
 
 2)Enable to insert rows and columns<br>
 &nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
@@ -126,6 +126,9 @@ Modify code
 
 4)Enable to change border style<br>
 &nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
+
+5)Enable to change background color of cell<br>
+&nbsp;&nbsp;-> Click the target cell after press click color on pupup mini-window.
 
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
 <em> How to use?</em><br>
@@ -137,7 +140,8 @@ Modify code
 ```
 <s>Note:IE11 display error dialog in usual drag operation.
 Click after double click (keep mouse-up), and mouse-move makes error dialog not display. -- temporary correspondence</s><br>
-<s>Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment.</s> -- Still unstable. Error occurs rarely. XD
+<s>Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment.</s> -- Still unstable. Error occurs rarely. XD<br>
+Note:In IE11, current table vanishes when add new table. I try fix, if I could.....I HATE IE11 !!!!
 
 - Image file <br>
   put icon files on image folder as below.<br>
@@ -148,3 +152,4 @@ Click after double click (keep mouse-up), and mouse-move makes error dialog not 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>insertrowcol.gif</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>resizecell.gif</em><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>borderstyle.gif</em><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>cellcolor.gif</em><br>
