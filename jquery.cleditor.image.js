@@ -200,6 +200,7 @@
 			}
 		});
 		
+		var draggingFile;
 		//Drag and Drop
 		if(window.navigator.userAgent.indexOf("rv:11")==-1)
 		{//chrome
@@ -226,12 +227,15 @@
 			});
 			
 			//Event:drop
-			cled.$frame.contents().on("drop","img",function(e)
+			//cled.$frame.contents().on("drop","img",function(e)
+			cled.$frame.contents().on("drop",function(e)
 			{
 				e.preventDefault();
 				e.stopPropagation();
+				
 				if(e.originalEvent.dataTransfer.files.length!=0)
 				{
+					console.log("drop");
 					//get from dataTransfer
 					var file=e.originalEvent.dataTransfer.files[0];
 					var file_reader = new FileReader();//API
