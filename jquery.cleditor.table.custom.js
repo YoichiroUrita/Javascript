@@ -10,7 +10,8 @@
 //modified by Y.Urita 2018.12.22 enable to insert rows and column
 //modified by Y.Urita 2018.12.23 eneble to resize cell
 //modified by Y.Urita 2018.12.24 enable to change border style
-//modified by Y.Urita 2018.12.25 enable to change color of cell, bug fix in drag  //[ie11] faint table when add new table.
+//modified by Y.Urita 2018.12.25 enable to change color of cell, bug fix in drag  //[ie11 Bug] faint table when add new table.
+//modified by Y.Urita 2018.12.26 enable to change background image of cell  //[ie11 Bug] faint table when add new table.
 
 (function ($) {
 
@@ -180,7 +181,20 @@
         popupClass: "cleditorPrompt",
         popupContent:
 			'<div style="width:150px;height:120px;background-color:white;">' +
-			colorPickerHtml+'</div>',
+			colorPickerHtml+'</div>' +
+			'R<input type="number" class="rgbaColor r" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
+			'G<input type="number" class="rgbaColor g" min=0 max=255 style="width:4em"><br>' +
+			'B<input type="number" class="rgbaColor b" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
+			'A<input type="number" class="rgbaColor a" min=0 max=1 step=0.01 style="width:4em"><br>' +
+			'Background Color<br>' +
+			'<div class="samplecolor" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
+			'Background Image<br>' +
+			'<div class="sampleimage" style="text-align:center;width:140px;height:14px;border:1px solid black;color:gray" title="Drop Image file">Drop image file to window</div>' +
+			'<label><input type="checkbox" value="background-color" checked>Background color ON</label><br>' + //Enable background color 
+			'<label><input type="checkbox" value="background-image" checked>Background image ON</label><br>' + //Enable background image 
+			'Smaple<br>' +
+			'<div class="syncBackground" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
+			'<br><input type="button" value="Submit">',
         buttonClick: cellcolorButtonClick
     };
     // Add the button to the default controls
@@ -526,6 +540,9 @@
     function cellcolorButtonClick(e, data) {
 		// Get the editor
         var editor = data.editor;
+		var imageObj;
+		//var rgbColor="rgb(255,255,255)";
+		var cellColor=$(data.popup).find(".samplecolor").css("background-color");
 		
 		//Get clicked color code 
 		$(data.popup).find(".colorpicker")
@@ -533,78 +550,157 @@
             .on("click", function (e) {
 
 				//Get the background-color from color picker
-				var cellColor=$(e.target).css("background-color");
+				var rgbColor=$(e.target).css("background-color");
 				
-				//Apply the color to cell
-				$($(editor.$frame[0]).contents()).on("click",function(e)
+				var rgb=rgbColor.replace("rgb(","").replace(")","").split(",");
+				
+				$(".rgbaColor.r").val(parseInt(rgb[0]));
+				$(".rgbaColor.g").val(parseInt(rgb[1]));
+				$(".rgbaColor.b").val(parseInt(rgb[2]));
+				$(".rgbaColor.a").val(1);
+				cellColor="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+",1)";
+				
+				$(data.popup).find(".samplecolor").css("background-color",cellColor);
+				
+				// Get the which positions are change
+                var cb = $(data.popup).find("input[type=checkbox]");
+				
+				//switch background color visibility by checkbox
+				if($(cb[0]).prop("checked")==true)
 				{
-					if($(e.target).is("td"))
-					{
-						$(e.target).css("background-color",cellColor);
-						
-						editor.updateTextArea();//update iframe
-					}
-					//off event -- cancel when click except table (include td)
-					$($(editor.$frame[0]).contents()).off("click");
-				});
-				editor.hidePopups();
-                editor.focus();
+					$(data.popup).find(".syncBackground").css("background-color",cellColor);
+				}
+				else
+				{
+					$(data.popup).find(".syncBackground").css("background-color","");
+				}
 			});
 			
 		//Drag and Drop
 		var draggingFile;
-		if(window.navigator.userAgent.indexOf("rv:11")==-1)
-		{//chrome
-			//Event:drag start ---- pass to dataTransfer
-			$("body").on("dragstart",$(data.popup).find(".colorpicker"),function(e)
-			{
-				if(e.originalEvent.dataTransfer.files.length!=0)
-				{//drag image file
-					draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
-				}
-			});
-			
-			$("body").on("dragover",$(data.popup).find(".colorpicker"),function(e)
-			{
-				e.preventDefault();
-			});
-			
-			//Event:drop
-			$(document).on("drop",".colorpicker",function(e)
-			{
-				e.preventDefault();
-				e.stopPropagation();
-				if(e.originalEvent.dataTransfer.files.length!=0)
-				{
-					//get from dataTransfer
-					var file=e.originalEvent.dataTransfer.files[0];
-					var file_reader = new FileReader();//API
-					
-					//ater file read
-					file_reader.onloadend = function(e){
 
-						// when error occur
-						if(file_reader.error) return;
-						
-						//Apply the image to cell
-						$($(editor.$frame[0]).contents()).on("click",function(e)
-						{
-							if($(e.target).is("td"))
-							{
-								$(e.target).css("background-image","url('"+file_reader.result+"')");
-								
-								editor.updateTextArea();//update iframe
-							}
-							//off event -- cancel when click except table (include td)
-							$($(editor.$frame[0]).contents()).off("click");
-						});
-						editor.hidePopups();
-						editor.focus();
+		//Event:drag start ---- pass to dataTransfer
+		$("body").on("dragstart",$(data.popup).find(".colorpicker"),function(e)
+		{
+			if(e.originalEvent.dataTransfer.files.length!=0)
+			{//drag image file
+				draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
+			}
+		});
+		
+		$("body").on("dragover",$(data.popup).find(".colorpicker"),function(e)
+		{
+			e.preventDefault();
+		});
+		
+		//Event:drop
+		$(document).on("drop",data.popup,function(e)
+		{
+			e.preventDefault();
+			e.stopPropagation();
+			if(e.originalEvent.dataTransfer.files.length!=0)
+			{	
+				//get from dataTransfer
+				var file=e.originalEvent.dataTransfer.files[0];
+				var file_reader = new FileReader();//API
+				
+				//ater file read
+				file_reader.onloadend = function(e){
+
+					// when error occur
+					if(file_reader.error) return;
+
+					//hide div tag used in image drop
+					if(window.navigator.userAgent.indexOf("rv:11")!=-1)$(".cleditorCatcher").hide();
+					
+					imageObj=file_reader.result;
+					
+					//apply image to sample 
+					$(".sampleimage").css("background-image","url('"+imageObj+"')");
+					
+					// Get the which positions are change
+					var cb = $(data.popup).find("input[type=checkbox]");
+				
+					//switch background image visibility by checkbox
+					if($(cb[1]).prop("checked")==true)
+					{
+						$(data.popup).find(".syncBackground").css("background-image","url('"+imageObj+"')");
 					}
-					file_reader.readAsDataURL(file);
+					else
+					{
+						$(data.popup).find(".syncBackground").css("background-image","");
+					}
 				}
+				file_reader.readAsDataURL(file);
+			}
+		});
+		
+		//on change RGBA number
+		$(data.popup).children(".rgbaColor")
+            .on("change", function (e) {
+					cellColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()
+							+","+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+				
+					$(data.popup).find(".samplecolor").css("background-color",cellColor);
+				});
+		
+		//on change Check Box 
+		$(data.popup)
+            .on("change","input[type=checkbox]", function (e) {
+					// Get the which positions are change
+					var cb = $(data.popup).find("input[type=checkbox]");
+					
+					//switch background color or image visibility by checkbox
+					if($(cb[0]).prop("checked")==true)
+					{
+						$(data.popup).find(".syncBackground").css("background-color",cellColor);
+					}
+					else
+					{
+						$(data.popup).find(".syncBackground").css("background-color","");
+					}
+					
+					if($(cb[1]).prop("checked")==true)
+					{
+						$(data.popup).find(".syncBackground").css("background-image","url('"+imageObj+"')");
+					}
+					else
+					{
+						$(data.popup).find(".syncBackground").css("background-image","");
+					}
+				});
+		
+		//Submit
+		$(data.popup).children(":button")
+            .off("click")
+            .on("click", function (e) {
+
+                // Get the which positions are change
+                var cb = $(data.popup).find("input[type=checkbox]");
+		
+				//Apply the image to cell
+				$(editor.$frame[0]).contents().on("click",function(e)
+				{	
+					if($(e.target).is("td"))
+					{	
+						if($(cb[0]).prop("checked")==true)
+						{
+							$(e.target).css("background-color",cellColor);
+						}	
+						if($(cb[1]).prop("checked")==true)
+						{
+							$(e.target).css("background-image","url('"+imageObj+"')");
+						}
+						
+						editor.updateTextArea();//update iframe
+					}
+					//off event -- cancel when click except table (include td)
+					$(editor.$frame[0]).contents().off("click");
+				});
+				editor.hidePopups();
+				editor.focus();
 			});
-		}
 	}
 	
 })(jQuery);
+
