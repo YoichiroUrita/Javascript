@@ -2,7 +2,7 @@
 plug-in about javascript/jQuery<br>
 ***
 
-# <a href="http://uritajp.wixsite.com/cleditor-custom">Demonstration for customized jQuery Cleditor is here.</a>
+# <a href="http://uritajp.wixsite.com/cleditor-custom">Demonstration for customized jQuery CLEditor is here.</a>
 
 ***
 # <a href="jquery.cleditor.image.js">jquery.cleditor.image.js</a><br>
@@ -11,7 +11,7 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <em> What is it? </em><br>
 
- This is simple plug-in for <a href="https://premiumsoftware.net/cleditor">jquery-cleditor</a>.
+ This is simple plug-in for <a href="https://premiumsoftware.net/cleditor">jquery-CLEditor</a>.
  
 1) Read image file by drag and drop<br>
 	-> Image is encoded to **base64**. <s> [This function doesn't work at IE11] </s><br>
