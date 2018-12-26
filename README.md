@@ -1,6 +1,10 @@
 # Javascript
 plug-in about javascript/jQuery<br>
 ***
+
+# <a href="http://uritajp.wixsite.com/cleditor-custom">Demonstration for customized jQuery Cleditor is here.</a>
+
+***
 # <a href="jquery.cleditor.image.js">jquery.cleditor.image.js</a><br>
 <br>
 
