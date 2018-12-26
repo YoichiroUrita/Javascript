@@ -127,9 +127,8 @@ Modify code
 4)Enable to change border style<br>
 &nbsp;&nbsp;-> Click the target cell after press submit button on pupup mini-window.
 
-5)Enable to change background color of cell (and draft function : to change background image of cell)<br>
-&nbsp;&nbsp;-> Click the target cell after press click color on pupup mini-window.<br>
-&nbsp;&nbsp;-> Draft\[Chrome only] Click the target cell after drop image file on color window.
+5)Enable to change background image and color of cell<br>
+&nbsp;&nbsp;-> Click the target cell after press click color or drop image file on pupup mini-window.<br>
 
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
 <em> How to use?</em><br>
