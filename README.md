@@ -70,7 +70,7 @@ Well...M$, Thanks for reduce my weekend..so, 「敢えて言おう、カスで�
 - Javascript/jQuery <br>
 ~ If your browser is Internet Explorer11, then you should edit 'jquery.cleditor.js' as below OR THROW IE11 AWAY.
 <br>
-around line 770 (IE11 only)<br>
+around line 770 (IE11 only) in CLEditor1.4.4<br>
 Original code
 
 ```javascript
@@ -101,6 +101,7 @@ Modify code
     return getSelection(editor).getRangeAt(0);
   }
 ```
+
 
 - Image file <br>
   put textbox.gif on image folder as below.<br>
@@ -145,8 +146,37 @@ Modify code
 <s>Note:IE11 display error dialog in usual drag operation.
 Click after double click (keep mouse-up), and mouse-move makes error dialog not display. -- temporary correspondence</s><br>
 <s>Fixed by updating jquery-2.2.3 to 2.2.4 in my enviorment.</s> -- Still unstable. Error occurs rarely. XD<br>
-Note:In IE11, current table vanishes when add new table. I try fix, if I could.....I HATE IE11 !!!!
+<s>Note:In IE11, current table vanishes when add new table. I try fix, if I could.....</s>I HATE IE11 !!!!
 
+around line 736 (IE11 only) in CLEditor1.4.5 \[Temporaly bug fix]<br>
+Inserthtml method cause this problem. So, `Paste As Text` button has same problem.<br>
+Why M$ often does NOT follow W3C Standards ?
+
+Original code
+
+```javascript
+	else if (iege11 && inserthtml) {
+            var selection = getSelection(editor),
+                range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(range.createContextualFragment(value));
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+```
+
+Modify code (Comment out for 2 rows)
+
+```javascript
+	else if (iege11 && inserthtml) {
+            var selection = getSelection(editor),
+                range = selection.getRangeAt(0);
+            //range.deleteContents();
+            range.insertNode(range.createContextualFragment(value));
+            //selection.removeAllRanges();
+            selection.addRange(range);
+        }
+```
 - Image file <br>
   put icon files on image folder as below.<br>
   
