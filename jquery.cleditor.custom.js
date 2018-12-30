@@ -7,7 +7,11 @@
  Dual licensed under the MIT or GPL Version 2 licenses.
 */
 //modified by Y.Urita 2018.12.24 localize (Japanese) and more.
-
+/*
+ * NOTE: IE(below 10) are NOT suported in this custom.
+ * modify ver.A Y.Urita 2018.12.30 The source follows HTML5. The color popup add transparent color.
+ */
+ 
 (function ($) {
 
     //==============
@@ -34,11 +38,10 @@
                           "333 600 930 963 660 060 366 009 339 636 " +
                           "000 300 630 633 330 030 033 006 309 303",
             fonts:        // font names in the font popup
-						  "MS PGothic,ＭＳ Ｐゴシック,"+
+						  "MS PGothic,ＭＳ Ｐゴシック,Meiryo"+
                           "Arial,Arial Black,Comic Sans MS,Courier New,Narrow,Garamond," +
                           "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
             sizes:        // sizes in the font size popup
-                          //"1,2,3,4,5,6,7",
 						  "8pt,10pt,12pt,14pt,16pt,24pt,32pt,48pt",
             styles:       // styles in the style popup
                           [["Paragraph", "<p>"], ["Header 1", "<h1>"], ["Header 2", "<h2>"],
@@ -71,7 +74,7 @@
 			  "style,見出しスタイル,formatblock,|" +
 			  "color,文字色,forecolor,|" +
 			  "highlight,ハイライト色,hilitecolor,color,|" +
-			  "removeformat,書式のクリア,Remove Formatting|" +
+			  "removeformat,書式のクリア,removeformat|" +
 			  "bullets,箇条書き,insertunorderedlist|" +
 			  "numbering,段落番号,insertorderedlist|" +
 			  "outdent,アウトデント,outdent|" +
@@ -154,8 +157,6 @@
 
     // Browser detection
     ua = navigator.userAgent.toLowerCase(),
-    ie = /msie/.test(ua),
-    ie6 = /msie\s6/.test(ua),
     iege11 = /(trident)(?:.*rv:([\w.]+))?/.test(ua),
     webkit = /webkit/.test(ua),
 
@@ -280,11 +281,7 @@
                 if (button.stripIndex) map.backgroundPosition = button.stripIndex * -24;
                 $buttonDiv.css(map);
 
-                // Add the unselectable attribute for ie
-                if (ie)
-                    $buttonDiv.attr(UNSELECTABLE, "on");
-
-                // Create the popup
+                 // Create the popup
                 if (button.popupName)
                     createPopup(button.popupName, options, button.popupClass,
                       button.popupContent, button.popupHover);
@@ -630,6 +627,9 @@
                 $(DIV_TAG).appendTo($popup)
                     .css(BACKGROUND_COLOR, "#" + color);
             });
+			$($popup).append(
+				'<div style="text-align:center;width:140px;height:14px;background-color:transparent">Transparent</div>'
+				);//add transparent color
             popupTypeClass = COLOR_CLASS;
         }
 
@@ -645,7 +645,7 @@
         else if (popupName === "size")
             $.each(options.sizes.split(","), function (idx, size) {
                 $(DIV_TAG).appendTo($popup)
-                    .html('<span size="' + size + '">' + size + '</span>');
+					.html('<span style="font-size:' + size + '">' + size + '</span>');// 
             });
 
         // Style
@@ -673,11 +673,11 @@
         $popup.addClass(popupTypeClass);
 
         // Add the unselectable attribute to all items
-        if (ie) {
-            $popup.attr(UNSELECTABLE, "on")
-                .find("div,font,p,h1,h2,h3,h4,h5,h6")
-                .attr(UNSELECTABLE, "on");
-        }
+        //if (ie) {
+        //    $popup.attr(UNSELECTABLE, "on")
+        //        .find("div,font,p,h1,h2,h3,h4,h5,h6")
+        //        .attr(UNSELECTABLE, "on");
+       // }
 
         // Add the hover effect to all items
         if ($popup.hasClass(LIST_CLASS) || popupHover === true)
@@ -703,11 +703,8 @@
         }
 
         // Switch the iframe into design mode.
-        // ie6 does not support designMode.
-        // ie7 & ie8 do not properly support designMode="off".
         try {
-            if (ie) editor.doc.body.contentEditable = !disabled;
-            else editor.doc.designMode = !disabled ? "on" : "off";
+              editor.doc.designMode = !disabled ? "on" : "off";
         }
         // Firefox 1.5 throws an exception that can be ignored
         // when toggling designMode from off to on.
@@ -725,33 +722,135 @@
         restoreRange(editor);
 
         // Set the styling method
-        if (!ie) {
-            if (useCSS === undefined || useCSS === null)
-                useCSS = editor.options.useCSS;
+		if (useCSS === undefined || useCSS === null)
+			useCSS = editor.options.useCSS;
             editor.doc.execCommand("styleWithCSS", 0, useCSS.toString());
-        }
-		  var execFontSize = function (editor, size) {
-			  var spanString = $('<span/>', {
-				  'text': editor.doc.getSelection()
-			  }).css('font-size', size).prop('outerHTML');
+		
+		var execFontSize = function (editor, size) {
+			if(iege11)
+			{//ie11
+				editor.doc.execCommand('italic', 0, size);//dummy style
+				editor.$frame.contents().find("body").html(
+					editor.$frame.contents().find("body").html()
+					.replace(/\<em/,'<span style="font-size:'+size+'"').replace(/em\>/,"span>"));
+			}
+			else
+			{//chrome
+				//refer from https://stackoverflow.com/questions/5868295/document-execcommand-fontsize-in-pixels
+				editor.doc.execCommand('fontSize', 0, size);
+				editor.$frame.contents()
+					.find('[style*="font-size: -webkit-xxx-large"],font[size]').css("font-size", size);
+			}
 
-			  editor.doc.execCommand('insertHTML', false, spanString);
-		  };
+		};
 		
         // Execute the command and check for error
         var inserthtml = command.toLowerCase() === "inserthtml";
-        if (ie && inserthtml)
-            getRange(editor).pasteHTML(value);
 
-        else if (iege11 && inserthtml) {
+        if (iege11 && inserthtml) {
             var selection = getSelection(editor),
-                range = selection.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(range.createContextualFragment(value));
-            selection.removeAllRanges();
-            selection.addRange(range);
+			//if(selection.rangeCount!=0)
+			//{
+				range = selection.getRangeAt(0);
+				//range.deleteContents();
+				range.insertNode(range.createContextualFragment(value));
+				//selection.removeAllRanges();
+				selection.addRange(range);
+			//}
         }
         
+		//BOLD in IE11 to compatible with HTML5
+		else if(iege11 && command == "bold"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<strong/,'<span style="font-weight: bold;"').replace(/strong\>/,"span>"));
+		}
+		//ITALIC in IE11 to compatible with HTML5
+		else if(iege11 && command =="italic" ){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<em/,'<span style="font-style: italic;"').replace(/em\>/,"span>"));
+		}
+		//STRIKE in IE11 to compatible with HTML5
+		else if(iege11 && command == "strikethrough"){
+			editor.doc.execCommand(command, 0, true); //selected range seems to have bug?
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<strike"/,'<s').replace(/strike\>/,"s>"));
+		}
+		//FONTNAME in IE11 to compatible with HTML5
+		else if(iege11 && command == "fontname"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<font face=\"/,'<span style="font-family: ').replace(/font\>/,"span>"));
+		}
+		//FORECOLOR in IE11 to compatible with HTML5
+		else if(iege11 && command == "forecolor"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<font color=\"/,'<span style="color: ').replace(/font\>/,"span>"));
+		}
+		//HILITECOLOR in IE11 to compatible with HTML5
+		else if(iege11 && command == "hilitecolor"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<font/,'<span').replace(/font\>/,"span>"));
+		}
+		//ALIGN LEFT in IE11 to compatible with HTML5
+		else if(iege11 && command == "justifyleft"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<p align\=\"/,'<span style="text-align:').replace(/p\>/,"span>"));
+		}
+		//ALIGN CENTER in IE11 to compatible with HTML5
+		else if(iege11 && command == "justifycenter"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<p align\=\"/,'<div style="text-align:').replace(/p\>/,"span>"));
+		}
+		//ALIGN RIGHT in IE11 to compatible with HTML5
+		else if(iege11 && command == "justifyright"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<p align\=\"/,'<div style="text-align:').replace(/p\>/,"span>"));
+		}
+		//ALIGN JUSTFY in IE11 to compatible with HTML5
+		else if(iege11 && command == "justifyfull"){
+			editor.doc.execCommand(command, 0, true);
+			
+			editor.$frame.contents().find("body").html(
+				editor.$frame.contents().find("body").html()
+				.replace(/\<p align\=\"/,'<div style="text-align:').replace(/p\>/,"span>"));
+		}
+		
+		//remove format
+		//refer from https://stackoverflow.com/questions/14028773/javascript-execcommandremoveformat-doesnt-strip-h2-tag
+		else if(command == "removeformat"){
+			editor.doc.execCommand(command, false, null);
+			var select = getSelection(editor),
+				container = null;
+			if (select.rangeCount > 0)
+				container = select.getRangeAt(0).startContainer.parentNode;
+			$(container).contents().unwrap();
+		}
+		
         else {
             var success = true, message;
             //try { success = editor.doc.execCommand(command, 0, value || null); }
@@ -760,6 +859,7 @@
 			  execFontSize(editor, value);
 			}
 			else {
+				console.log(command);
 			  success = editor.doc.execCommand(command, 0, value || null);
 			}
 			
@@ -793,7 +893,6 @@
 
     // getRange - gets the current text range object
     function getRange(editor) {
-        if (ie) return getSelection(editor).createRange();
 		if (iege11)
 		{
 			if(getSelection(editor).rangeCount!=0)
@@ -810,7 +909,7 @@
 
     // getSelection - gets the current text range object
     function getSelection(editor) {
-        if (ie) return editor.doc.selection;
+        //if (ie) return editor.doc.selection;
         return editor.$frame[0].contentWindow.getSelection();
     }
 
@@ -888,14 +987,14 @@
 
         // Work around for bug in IE which causes the editor to lose
         // focus when clicking below the end of the document.
-        if (ie || iege11)
+        if (iege11)
             $doc.click(function () { focus(editor); });
 
         // Load the content
         updateFrame(editor);
 
         // Bind the ie specific iframe event handlers
-        if (ie || iege11) {
+        if (iege11) {
 
             // Save the current user selection. This code is needed since IE will
             // reset the selection just after the beforedeactivate event and just
@@ -951,10 +1050,6 @@
             .keydown(function (e) {
                 // Prevent Internet Explorer from going to prior page when an image 
                 // is selected and the backspace key is pressed.
-                if (ie && getSelection(editor).type == "Control" && e.keyCode == 8) {
-                    getSelection(editor).clear();
-                    e.preventDefault();
-                }
             })
             .on("keyup mouseup", function () {
                 refreshButtons(editor);
@@ -983,7 +1078,7 @@
 
             // Resize the textarea. IE6 textareas have a 1px top
             // & bottom margin that cannot be removed using css.
-            editor.$area.width(wid).height(ie6 ? hgt - 2 : hgt);
+            editor.$area.width(wid).height(hgt);
 
             // Switch the iframe into design mode if enabled
             disable(editor, editor.disabled);
@@ -1007,7 +1102,6 @@
 
         // Get the object used for checking queryCommandEnabled
         var queryObj = editor.doc;
-        if (ie) queryObj = getRange(editor);
 
         // Loop through each button
         var inSourceMode = sourceMode(editor);
@@ -1035,14 +1129,10 @@
                 if (enabled === undefined)
                     enabled = true;
             }
-            else if (((inSourceMode || iOS) && button.name !== "source") ||
-            (ie && (command === "undo" || command === "redo")))
+            else if ((inSourceMode || iOS) && button.name !== "source") 
                 enabled = false;
             else if (command && command !== "print") {
-                if (ie && command === "hilitecolor")
-                    command = "backcolor";
-                // IE does not support inserthtml, so it's always enabled
-                if ((!ie && !iege11)  || command !== "inserthtml") {
+				if ((!iege11)  || command !== "inserthtml") {
                     try { enabled = queryObj.queryCommandEnabled(command); }
                     catch (err) { enabled = false; }
                 }
@@ -1064,9 +1154,7 @@
     // restoreRange - restores the current ie selection
     function restoreRange(editor) {
         if (editor.range) {
-            if (ie)
-                editor.range[0].select();
-            else if (iege11)
+            if (iege11)
                 getSelection(editor).addRange(editor.range[0]);
         }
     }
@@ -1083,8 +1171,6 @@
     function selectedHTML(editor) {
         restoreRange(editor);
         var range = getRange(editor);
-        if (ie)
-            return range.htmlText;
         var layer = $("<layer>")[0];
         layer.appendChild(range.cloneContents());
         var html = layer.innerHTML;
@@ -1095,7 +1181,6 @@
     // selectedText - returns the current text selection or and empty string
     function selectedText(editor) {
         restoreRange(editor);
-        if (ie) return getRange(editor).text;
         return getSelection(editor).toString();
     }
 
@@ -1216,3 +1301,4 @@
     }
 
 })(jQuery);
+
