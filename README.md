@@ -12,7 +12,7 @@ plug-in about javascript/jQuery<br>
 <i> How different? </i>
 
 <ul>
-	<li> Exsisting source support HTML5 in IE11. (Chrome already supported) </li>
+	<li> Exsisting source supports HTML5 in IE11. (Chrome already supported) </li>
 	<li> Font size is selectable by pt unit. </li>
 	<li> Transparent color is selectable by color pallette. </li>
 </ul>
