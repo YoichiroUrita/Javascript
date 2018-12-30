@@ -5,6 +5,30 @@ plug-in about javascript/jQuery<br>
 # <a href="http://uritajp.wixsite.com/cleditor-custom">Demonstration for customized jQuery CLEditor is here.</a>
 
 ***
+
+# <a href="jquery.cleditor.custom.js">jquery.cleditor.custom.js</a><br>
+
+![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
+<i> How different? </i>
+
+<ul>
+	<li> Exsisting source support HTML5 in IE11. (Chrome already supported) </li>
+	<li> Font size is selectable by pt unit. </li>
+	<li> Transparent color is selectable by color pallette. </li>
+</ul>
+
+![#008c15](https://placehold.it/15/008c15/000000?text=+)
+<i> Have you any plan? </i>
+
+I have only few ideas in this time.
+
+<ul>
+	<li> Migration with below files. </li>
+	<li> Selectable border style with ruler (HR tag). </li>
+	<li> Selective way of element from 'past setting' to 'previous setting' in images and tables. </li>
+</ul>
+
+***
 # <a href="jquery.cleditor.image.js">jquery.cleditor.image.js</a><br>
 <br>
 
