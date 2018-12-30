@@ -28,6 +28,8 @@ I have only few ideas in this time.
 	<li> Selective way of element from 'past setting' to 'previous setting' in images and tables. </li>
 </ul>
 
+Sorry for slowly deve
+
 ***
 # <a href="jquery.cleditor.image.js">jquery.cleditor.image.js</a><br>
 <br>
