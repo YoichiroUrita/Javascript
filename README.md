@@ -11,6 +11,7 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.A
 <ul>
 	<li> Exsisting source supports HTML5 in IE11. (Chrome already supported) <br>
 		<b>IE(below 10) are NOT suport in this custom file.</b>
