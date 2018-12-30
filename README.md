@@ -15,6 +15,7 @@ plug-in about javascript/jQuery<br>
 	<li> Exsisting source supports HTML5 in IE11. (Chrome already supported) </li>
 	<li> Font size is selectable by pt unit. </li>
 	<li> Transparent color is selectable by color pallette. </li>
+	<li> Button titles are translated Japanese. (Please replace it to original word, if you want.) </li>
 </ul>
 
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
