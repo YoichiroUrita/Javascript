@@ -12,7 +12,9 @@ plug-in about javascript/jQuery<br>
 <i> How different? </i>
 
 <ul>
-	<li> Exsisting source supports HTML5 in IE11. (Chrome already supported) </li>
+	<li> Exsisting source supports HTML5 in IE11. (Chrome already supported) <br>
+		<b>IE(below 10) are NOT suport in this custom file.</b>
+	</li>
 	<li> Font size is selectable by pt unit. </li>
 	<li> Transparent color is selectable by color pallette. </li>
 	<li> Button titles are translated Japanese. (Please replace it to original word, if you want.) </li>
