@@ -14,7 +14,7 @@ plug-in about javascript/jQuery<br>
 Ver.A
 <ul>
 	<li> Exsisting source supports HTML5 in IE11. (Chrome already supported) <br>
-		<b>IE(below 10) are NOT suport in this custom file.</b>
+		<b>IE(below 10) are NOT suported in this custom file.</b>
 	</li>
 	<li> Font size is selectable by pt unit. </li>
 	<li> Transparent color is selectable by color pallette. </li>
