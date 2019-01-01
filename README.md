@@ -11,6 +11,11 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.B
+<ul>
+	<li> Integration with <a href="#cleditor_image">jquery.cleditor.image.js</a>.</li>
+	<li> Enable to cancel in image zooming.</li>
+</ul>
 Ver.A
 <ul>
 	<li> Exsisting source supports HTML5 in IE11. (Chrome already supported) <br>
@@ -34,7 +39,7 @@ I have only few ideas in this time.
 
 
 ***
-# <a href="jquery.cleditor.image.js">jquery.cleditor.image.js</a><br>
+# <a href="jquery.cleditor.image.js" name="cleditor_image">jquery.cleditor.image.js</a><br>
 <br>
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
@@ -77,7 +82,7 @@ $( id of same textarea as cleditor).cleditorXP();  //put after declaration of cl
 
 Well...M$, Thanks for reduce my weekend..so, 「敢えて言おう、カスであると！(If it is dare say you scum)」by Gihren Zabi
 ***
-# <a href="jquery.cleditor.textbox.js">jquery.cleditor.textbox.js</a><br>
+# <a href="jquery.cleditor.textbox.js" id="cleditor_textbox">jquery.cleditor.textbox.js</a><br>
 <br>
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
