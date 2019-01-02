@@ -11,6 +11,10 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.C
+<ul>
+	<li> Integration with <a href="#cletitor_textbox">jquery.cleditor.textbox.js</a>.</li>
+</ul>
 Ver.B
 <ul>
 	<li> Integration with <a href="#cleditor_image">jquery.cleditor.image.js</a>.</li>
@@ -83,7 +87,7 @@ $( id of same textarea as cleditor).cleditorXP();  //put after declaration of cl
 
 Well...M$, Thanks for reduce my weekend..so, 「敢えて言おう、カスであると！(If it is dare say you scum)」by Gihren Zabi
 ***
-# <a href="jquery.cleditor.textbox.js" id="cleditor_textbox">jquery.cleditor.textbox.js</a><br>
+# <a href="jquery.cleditor.textbox.js" name="cleditor_textbox">jquery.cleditor.textbox.js</a><br>
 <br>
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
