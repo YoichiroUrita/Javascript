@@ -32,6 +32,30 @@ Ver.A
 </ul>
 
 ![#008c15](https://placehold.it/15/008c15/000000?text=+)
+<i> How to use?</i><br>
+- HTML
+
+```HTML
+<script src="jquery.js"></script>
+<script src="jquery.cleditor.custom.js"></script>  //put after jquery
+```
+
+- Javascript/jQuery 
+
+```javascript
+$( id of same textarea as cleditor).cleditor();  //put after declaration of cleditor
+```
+
+<a href="cleditor.demo.html">Sample is here.</a>
+
+![#ffff00](https://placehold.it/15/ffff00/000000?text=+)
+<i>My environment</i>
+- Windows10 
+- Chrome ver.71.0.3578.98 (at 2019.1.2)
+- InternetExplorer11 ver.11.472.17134.0 (Why IE11? Because of same as my office env.)
+- jquery 2.2.4
+
+![#1010ff](https://placehold.it/15/1010ff/000000?text=+)
 <i> Have you any plan? </i>
 
 I have only few ideas in this time.
