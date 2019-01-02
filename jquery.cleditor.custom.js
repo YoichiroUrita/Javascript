@@ -11,6 +11,7 @@
  * NOTE: IE(below 10) are NOT suported in this custom.
  * modify ver.A Y.Urita 2018.12.30 The source follows HTML5. The color popup add transparent color.
  * modify ver.B Y.Urita 2019. 1. 1 Integration with jquery.cleditor.image.js, a little improvement.
+ * modify ver.C Y.Urita 2019. 1. 2 Integration with jquery.cleditor.textbox.js, a littele improvement.
  */
  
 (function ($) {
@@ -29,7 +30,7 @@
                           "bold italic underline strikethrough subscript superscript | font size " +
                           "style | color highlight removeformat | bullets numbering | outdent " +
                           "indent | alignleft center alignright justify | undo redo | " +
-                          "rule image link unlink | cut copy paste pastetext | print source",
+                          "rule | textbox | image link unlink | cut copy paste pastetext | print source",
             colors:       // colors in the color popup
                           "FFF FCC FC9 FF9 FFC 9F9 9FF CFF CCF FCF " +
                           "CCC F66 F96 FF6 FF3 6F9 3FF 6FF 99F F9F " +
@@ -74,7 +75,7 @@
 			  "size,フォントサイズ,fontsize,|" +
 			  "style,見出しスタイル,formatblock,|" +
 			  "color,文字色,forecolor,|" +
-			  "highlight,ハイライト色,hilitecolor,color,|" +
+			  "highlight,ハイライト色,hilitecolor,color|" +
 			  "removeformat,書式のクリア,removeformat|" +
 			  "bullets,箇条書き,insertunorderedlist|" +
 			  "numbering,段落番号,insertorderedlist|" +
@@ -87,6 +88,7 @@
 			  "undo,元に戻す,undo|" +
 			  "redo,やり直し,redo|" +
 			  "rule,横罫線の挿入,inserthorizontalrule|" +
+			  "textbox,Insert Textbox,textbox,color,textbox.gif|" + //addtion
 			  "image,画像の挿入(リンク),insertimage,url|" +
 			  "link,ハイパーリンク,createlink,url|" +
 			  "unlink,ハイパーリンクの解除,Remove Hyperlink,|" +
@@ -180,7 +182,7 @@
 		y,
 		isDrag=false,
 		draggingFile,
-		sizing=$("<div id='sizing' style='background-color:#ececec;position:absolute;padding:2px'>"+
+		sizing=$("<div class='cleditorSizing' style='background-color:#ececec;position:absolute;padding:2px'>"+
 				"<b style='text-align:center;display:block'>Image resizing</b>"+
 				"<label>"+
 				"<input type='radio' name='sizing' value='width'>Fit with Width</input>"+
@@ -189,14 +191,14 @@
 				"</label><br><label>"+
 				"<input type='radio' name='sizing' value='zoom'>Zoom</input>"+
 				"</label>"+
-				"<input type='text' id='zoom' style='width:3em'>%<br>"+
+				"<input type='text' name='zoom' style='width:3em'>%<br>"+
 				"<label>"+
 				"<input type='radio' name='sizing' value='reset'>Reset location</input>"+
 				"</label><br>"+
 				
-				"<input type='button' value='Apply' id='butApply'>"+ 
-				"<input type='button' value='Cancel' id='butCancel'>"+ 
-				"<input type='button' value='close' id='butClose'>"+ 
+				"<input type='button' value='Apply' class='butApply'>"+ 
+				"<input type='button' value='Cancel' class='butCancel'>"+ 
+				"<input type='button' value='close' class='butClose'>"+ 
 				"</div>");
 	
     //===============
@@ -206,15 +208,18 @@
     // Expand the buttons.init string back into the buttons object
     //   and create seperate object properties for each button.
     //   e.g. buttons.size.title = "Font Size"
+	var inc=0;//addintion
     $.each(buttons.init.split("|"), function (idx, button) {
         var items = button.split(","), name = items[0];
         buttons[name] = {
-            stripIndex: idx,
+            stripIndex: items[4]===undefined ? inc++ : "",//change
             name: name,
             title: items[1] === "" ? name.charAt(0).toUpperCase() + name.substr(1) : items[1],
             command: items[2] === "" ? name : items[2],
-            popupName: items[3] === "" ? name : items[3]
+            popupName: items[3] === "" ? name : items[3],
+			image: items[4] === undefined ? undefined : items[4] //addition for icon image file
         };
+		
     });
     delete buttons.init;
 
@@ -296,17 +301,17 @@
                     .on(CLICK, $.proxy(buttonClick, editor))
                     .appendTo($group)
                     .hover(hoverEnter, hoverLeave);
-
+				
                 // Update the group width
                 groupWidth += 24;
                 $group.width(groupWidth + 1);
 
                 // Prepare the button image
-                var map = {};
+                var map = {},offset=0;
                 if (button.css) map = button.css;
                 else if (button.image) map.backgroundImage = imageUrl(button.image);
-                if (button.stripIndex) map.backgroundPosition = button.stripIndex * -24;
-                $buttonDiv.css(map);
+				if (button.stripIndex ) map.backgroundPosition = button.stripIndex * -24 + offset;
+				$buttonDiv.css(map);
 
                  // Create the popup
                 if (button.popupName)
@@ -343,7 +348,9 @@
 		$main.append(sizing);
 		$(sizing).hide();
 		imageToolbox(editor);
-
+	
+		//draggable text box
+		textBox(editor)
     };
 
     //===============
@@ -447,7 +454,7 @@
             else {
                 editor.$frame.hide();
                 editor.$area.show();
-				$("#sizing").hide();
+				editor.$main.find(".cleditorSizing").hide();
                 buttonDiv.title =  "リッチテキストに切り替え";//"Show Rich Text";
             }
 
@@ -559,7 +566,7 @@
         // Check for message and prompt popups
         if (popup === popups.msg || $(popup).hasClass(PROMPT_CLASS))
             return;
-
+		
         // Get the button info
         var buttonDiv = $.data(popup, BUTTON),
             buttonName = $.data(buttonDiv, BUTTON_NAME),
@@ -587,7 +594,12 @@
             //else useCSS = true;
             useCSS = true;
         }
-
+		else if (buttonName ==='textbox'){
+			value = hex(target.style.backgroundColor);
+			hidePopups();
+			focus(editor);
+		}
+		
         // Fire the popupClick event
         var data = {
             editor: editor,
@@ -620,11 +632,13 @@
 	//fire when mouse down
 	function mdown(e,editor) {
 		//get relative position
-		x = e.pageX - $("#sizing").get(0).offsetLeft;
-		y = e.pageY - $("#sizing").get(0).offsetTop;
+		var imgSizing=$(editor.$main).find(".cleditorSizing");
+
+		x = e.pageX - $(imgSizing).get(0).offsetLeft;
+		y = e.pageY - $(imgSizing).get(0).offsetTop;
 		
 		//move event
-		$(editor).off("mousemove").on("mousemove","#sizing",function(e){mmove(e,editor)});
+		$(editor.$main).off("mousemove").on("mousemove",imgSizing,function(e){mmove(e,editor)});
 	}
 	
 	//fire when mouse move
@@ -632,24 +646,68 @@
 		//prevent default event
 		e.preventDefault();
 		
+		var imgSizing=$(editor.$main).find(".cleditorSizing");
 		//trace mouse
-		$("#sizing").css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
+		$(imgSizing).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
 		
 		//mouse up or mouse leave event
-		$(editor).off("mouseup").on("mouseup","#sizing",function(e){mup(e,editor)});
-		$(editor).off("mouseleave").on("mouseleave","#sizing",function(e){mup(e,editor)});
+		$(editor.$main).off("mouseup").on("mouseup",imgSizing,function(e){mup(e,editor)});
+		$(editor.$main).off("mouseleave").on("mouseleave",imgSizing,function(e){mup(e,editor)});
 	}
 	
 	//fire when mouse up
 	function mup(e,editor) {
-
 		//remove event handler
-		$(editor).off("mousemove","#sizing");
-		$(editor).off("mouseleave","#sizing");
-		$(editor).off("mouseup","#sizing");
+		$(editor.$main).off("mousemove");
+		$(editor.$main).off("mouseleave");
+		$(editor.$main).off("mouseup");
 	}
 	
+	//fire when mouse down
+	function Mousedown(e,editor,target) {
+		isDrag=true;
+		var frameBody=editor.$frame.contents().find("body");
 
+		if(positionX=="" && positionY=="")
+		{
+			//get relative position
+			positionX=$(e.target).css("left")!="auto" ? parseFloat($(e.target).css("left")) : 0;
+			positionY=$(e.target).css("top")!="auto" ? parseFloat($(e.target).css("top")) : 0;
+			x = e.pageX - positionX;
+			y = e.pageY - positionY;
+		}
+		//move event
+		$(frameBody).on("mousemove",target,function(ev){Mousemove(ev,editor,target)});
+	}
+	
+	//fire when mouse move
+	function Mousemove(e,editor,target) {
+		if(isDrag==true)
+		{
+			var frameBody=editor.$frame.contents().find("body");
+			//prevent default event
+			e.preventDefault();
+
+			//trace mouse
+			$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
+			
+			//mouse up or mouse leave event
+			$(frameBody).on("mouseup",e.target,function(ev){Mouseup(ev,editor,target)});
+			$(frameBody).on("mouseleave",target,function(ev){Mouseup(ev,editor,target)});
+		}
+	}
+
+	//fire when mouse up
+	function Mouseup(e,editor,target) {
+		var frameBody=editor.$frame.contents().find("body");
+		//remove event handler
+		$(frameBody).off("mousemove",Mousemove);
+		$(frameBody).off("mouseleave",Mouseup);
+		$(e.target).off("mouseup",Mouseup);
+		isDrag=false;
+		positionX=positionY="";
+	}
+	
 	
     //==================
     // Private Functions
@@ -815,11 +873,45 @@
 			}
 
 		};
-		
+				
         // Execute the command and check for error
         var inserthtml = command.toLowerCase() === "inserthtml";
+		
+		//insert textbox
+		if(command == "textbox"){
+			var selection = getSelection(editor);
+			//if selection was already made, change background color.
+			//if($(selection).is("textarea"))
+			{
+			//	editor.doc.execCommand('backColor',0,value);
+			}
+			//make new textarea
+			//else
+			{
+				// Build the html
+				var frameBody=editor.$frame.contents().find("body");
+				var scrTop=$(frameBody).scrollTop();
+                var html = "<textarea style='position:relative;top:"+scrTop+"px;left:0px;width:100px;height:20px;background-color:"
+						+value+";'></textarea>&#10;";
+						
+				// Insert the html
+                if (html)
+				{	
+					if(iege11)
+					{//ie11
+						range = selection.getRangeAt(0);
+						range.insertNode(range.createContextualFragment(html));
+						selection.addRange(range)
+					}
+					else
+					{//chrome
+						editor.doc.execCommand('insertHTML',false,html);
+					}
+				}
+			}
+		}
 
-        if (iege11 && inserthtml) {
+        else if (iege11 && inserthtml) {
             var selection = getSelection(editor),
 			//if(selection.rangeCount!=0)
 			//{
@@ -916,6 +1008,7 @@
 		//refer from https://stackoverflow.com/questions/14028773/javascript-execcommandremoveformat-doesnt-strip-h2-tag
 		else if(command == "removeformat"){
 			editor.doc.execCommand(command, false, null);
+			//for reset h1
 			var select = getSelection(editor),
 				container = null;
 			if (select.rangeCount > 0)
@@ -923,6 +1016,7 @@
 			$(container).contents().unwrap();
 		}
 		
+
         else {
             var success = true, message;
             //try { success = editor.doc.execCommand(command, 0, value || null); }
@@ -931,7 +1025,6 @@
 			  execFontSize(editor, value);
 			}
 			else {
-				console.log(command);
 			  success = editor.doc.execCommand(command, 0, value || null);
 			}
 			
@@ -1183,7 +1276,7 @@
                 button = $.cleditor.buttons[$.data(elem, BUTTON_NAME)],
                 command = button.command,
                 enabled = true;
-
+			
             // Determine the state
             if (editor.disabled)
                 enabled = false;
@@ -1203,13 +1296,13 @@
             }
             else if ((inSourceMode || iOS) && button.name !== "source") 
                 enabled = false;
-            else if (command && command !== "print") {
+            else if (command && command !== "print" && command !=="textbox") { //change
 				if ((!iege11)  || command !== "inserthtml") {
                     try { enabled = queryObj.queryCommandEnabled(command); }
                     catch (err) { enabled = false; }
                 }
             }
-
+			
             // Enable or disable the button
             if (enabled) {
                 $elem.removeClass(DISABLED_CLASS);
@@ -1407,24 +1500,26 @@
 	//for extension command with image
 	function imageToolbox(editor)
 	{
-		var targetImg;
-		var doneAry=[];
-	
+		var targetImg,
+			doneAry=[],
+			imgSizing=$(editor.$main).find(".cleditorSizing");
+		
 		//change icon when mouse enter and leave 
-		$("body").off("mouseenter").on("mouseenter","#sizing",function(e){
-			$("#sizing").css("cursor","move");
-			$("#sizing").find("label").css("cursor","default");//label,radio
-			$("#sizing").find("input").css("cursor","default");//button
+		$("body").off("mouseenter").on("mouseenter",$(imgSizing),function(e){
+			$(imgSizing).css("cursor","move");
+			$(imgSizing).find("label").css("cursor","default");//label,radio
+			$(imgSizing).find("input").css("cursor","default");//button
 		})
 		
-		$("body").off("mouseleave").on("mouseleave","#sizing",function(e){
-			$("#sizing").css("cursor","default");
+		$("body").off("mouseleave").on("mouseleave",$(imgSizing),function(e){
+			$(imgSizing).css("cursor","default");
 			$("body").css("cursor","default");
 		});
-
+		
+		//change icon on image
 		editor.$frame.contents().find("body").on("mouseenter","img",function(e){
 			editor.$frame.contents().find("img").css("cursor","move");
-		})
+		});
 		
 		editor.$frame.contents().find("body").on("mouseleave","img",function(e){
 			editor.$frame.contents().find("img").css("cursor","default");
@@ -1437,25 +1532,26 @@
 			targetImg=this;
 			if(positionX=="")positionX=editor.$frame.width()/2+editor.$frame.position().left;
 			if(positionY=="")positionY=editor.$frame.height()/2+editor.$frame.position().top;
-			$("#sizing").css({"top":positionY+"px","left":positionY+"px"}).show();
+			$(imgSizing).css({"top":positionY+"px","left":positionY+"px"}).show();
 			doneAry=[];
-			$("#sizing").find("#butCancel").prop("disabled",true);
+			$(imgSizing).find(".butCancel").prop("disabled",true);
 		});
 
 		//prevent keep dragging
-		$(document).off("mousedown")
-					.on("mousedown","#sizing>input,#sizing>label",function(e){mup(e,"body")});
+		editor.$main.off("mousedown")
+					.on("mousedown",".cleditorSizing input,.cleditorSizing label",function(e){mup(e,editor)});
 
 		//mouse down event to drag start
-		$("#sizing").on("mousedown",function(e){mdown(e,"body")});
+		editor.$main.find(".cleditorSizing").on("mousedown",function(e){mdown(e,editor)});
 
 		//click apply button
-		$(document).on("click","#butApply",function()		
+		editor.$main.on("click",".butApply",function()
 		{
 			//memorize for cancelation
 			doneAry.push($(targetImg).attr("style"));
 
-			var radioVal=$("#sizing input[name=sizing]:checked").val();
+			var radioVal=$(".cleditorSizing input[name=sizing]:checked",editor.$main).val();
+			
 			if(radioVal=="width")
 			{
 				var w=editor.$frame.contents().find("body").width();
@@ -1475,12 +1571,13 @@
 			{
 				$(targetImg).css({"left":"0px","top":"0px"});
 			}
-			$("#sizing").find("#butCancel").prop("disabled",false);
+			$(imgSizing).find(".butCancel").prop("disabled",false);
 
 		});
 		
 		//click cancel button
-		$(document).on("click","#butCancel",function()
+		//$(document).on("click","#butCancel",function()
+		editor.$main.on("click",".butCancel",function()
 		{
 			var i=doneAry.length;
 			$(targetImg).attr("style",doneAry[i-1]);
@@ -1488,7 +1585,7 @@
 			if(i==1)
 			{
 				doneAry=[];
-				$("#sizing").find("#butCancel").prop("disabled",true);
+				$(imgSizing).find(".butCancel").prop("disabled",true);
 			}
 			else
 			{
@@ -1497,7 +1594,8 @@
 		});
 		
 		//click close
-		$(document).on("click","#butClose",function(){$(sizing).hide()});
+		//$(document).on("click","#butClose",function(){$(sizing).hide()});
+		editor.$main.on("click",".butClose",function(){$(imgSizing).hide()});
 		
 		//Event:paste
 		editor.$frame.contents().find("body").on('paste',function(e)
@@ -1835,5 +1933,31 @@
 			});
 		}
 	}
+	
+	//for draggable textbox 
+	function textBox(editor)
+	{
+		var frameBody=$(editor.$frame[0]).contents().find("body");
+		
+		//mouse down event
+		$(frameBody).on("dblclick","textarea",function(e)
+		{
+			Mousedown(e,editor,"textarea");
+			
+			$(frameBody).on("mouseleave","textarea",function(e){
+				$(e.target).css("cursor","default");
+				$(frameBody).css("cursor","default");
+			});
+			
+			$(frameBody).on("click","textarea",function(e){
+				if(isDrag==false)
+				{
+					$(e.target).css("cursor","default");
+					$(frameBody).css("cursor","default");
+				}
+			});
+		});
+		
+		
+	}
 })(jQuery);
-
