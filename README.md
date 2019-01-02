@@ -13,7 +13,7 @@ plug-in about javascript/jQuery<br>
 
 Ver.C
 <ul>
-	<li> Integration with <a href="#cletitor_textbox">jquery.cleditor.textbox.js</a>.</li>
+	<li> Integration with <a href="#cleditor_textbox">jquery.cleditor.textbox.js</a>.</li>
 </ul>
 Ver.B
 <ul>
@@ -37,7 +37,7 @@ Ver.A
 I have only few ideas in this time.
 
 <ul>
-	<li> Migration with below files. </li>
+	<li> Integration with below files. </li>
 	<li> Selectable border style with ruler (HR tag). </li>
 	<li> Selective way of element from 'past setting' to 'previous setting' in images and tables. </li>
 </ul>
