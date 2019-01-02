@@ -15,6 +15,7 @@ Ver.B
 <ul>
 	<li> Integration with <a href="#cleditor_image">jquery.cleditor.image.js</a>.</li>
 	<li> Enable to cancel in image zooming.</li>
+	<li> Enbale to reset image location.</li>
 </ul>
 Ver.A
 <ul>
