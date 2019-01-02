@@ -37,13 +37,13 @@ Ver.A
 
 ```HTML
 <script src="jquery.js"></script>
-<script src="jquery.cleditor.custom.js"></script>  //put after jquery
+<script src="jquery.cleditor.custom.js"></script>  //put after jquery instead of original cleditor
 ```
 
 - Javascript/jQuery 
 
 ```javascript
-$( id of same textarea as cleditor).cleditor();  //put after declaration of cleditor
+$( id of same textarea as cleditor).cleditor();  
 ```
 
 <a href="cleditor.demo.html">Sample is here.</a>
