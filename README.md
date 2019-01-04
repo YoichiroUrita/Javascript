@@ -16,6 +16,8 @@ Ver.D
 	<li> Integration with <a href="#cleditor_tablecustom">jquery.cleditor.table.custom.js</a>.</li>
 	<li> Unification of changing  drag-mode by double click. (<a href="#operation">See this</a>)
 	<li> Enable to apply image to background with textbox.
+	<li> Enable to apply color to background with textbox and image.
+	<li> Enable to apply color to border with textbox and image.
 	<li> Note: Application border image is still disabled.
 </ul>
 Ver.C
