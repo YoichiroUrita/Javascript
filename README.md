@@ -54,7 +54,7 @@ Ver.A
 $( id of same textarea as cleditor).cleditor();  
 ```
 
-<a name="oparation"> - Operation </a>
+<a name="operation"> - Operation </a>
   
   To draggable mode 
   - Double click turns draggable mode on object.
@@ -193,7 +193,7 @@ Modify code
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- images<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>textbox.gif</em><br>
 ***
-# <a href="jquery.cleditor.table.custom.js" namem="cleditor_tablecustom">jquery.cleditor.table.custom.js</a><br>
+# <a href="jquery.cleditor.table.custom.js" name="cleditor_tablecustom">jquery.cleditor.table.custom.js</a><br>
 <br>
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
