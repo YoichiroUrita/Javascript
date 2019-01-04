@@ -12,6 +12,8 @@
  * modify ver.A Y.Urita 2018.12.30 The source follows HTML5. The color popup add transparent color.
  * modify ver.B Y.Urita 2019. 1. 1 Integration with jquery.cleditor.image.js, a little improvement.
  * modify ver.C Y.Urita 2019. 1. 2 Integration with jquery.cleditor.textbox.js, a littele improvement.
+ * modify ver.D Y.Urita 2019. 1. 4 Integration with jquery.cleditor.table.custom.js,
+ *								   Organization selection way of drag-mode to double click. and a littele improvement.
  */
  
 (function ($) {
@@ -30,7 +32,8 @@
                           "bold italic underline strikethrough subscript superscript | font size " +
                           "style | color highlight removeformat | bullets numbering | outdent " +
                           "indent | alignleft center alignright justify | undo redo | " +
-                          "rule | textbox | image link unlink | cut copy paste pastetext | print source",
+                          "rule | textbox | table insertrowcol resizecell | borderstyle background | " +
+						  "image link unlink | cut copy paste pastetext | print source",
             colors:       // colors in the color popup
                           "FFF FCC FC9 FF9 FFC 9F9 9FF CFF CCF FCF " +
                           "CCC F66 F96 FF6 FF3 6F9 3FF 6FF 99F F9F " +
@@ -88,7 +91,12 @@
 			  "undo,元に戻す,undo|" +
 			  "redo,やり直し,redo|" +
 			  "rule,横罫線の挿入,inserthorizontalrule|" +
-			  "textbox,Insert Textbox,textbox,color,textbox.gif|" + //addtion
+			  "textbox,テキストボックスの挿入,inserthtml,color,textbox.gif|" + //replace Japanese to Insert Textbox
+			  "table,表の挿入,inserthtml,table,table.gif|" + //replace Japanese to Insert Table
+			  "insertrowcol,行と列の挿入,insertrowcol,insertrowcol,insertrowcol.gif|" + //replace Japanese to Insert Rows and Columns
+			  "resizecell,セルの幅と高さ,resizecell,resizecell,resizecell.gif|" + //replace Japanese to Resize width and height of cell
+			  "borderstyle,枠線のスタイル,borderstyle,borderstyle,borderstyle.gif|" + //replace Japanese to Border style
+			  "background,背景のスタイル,background,background,cellcolor.gif|" + //replace Japanese to Border style
 			  "image,画像の挿入(リンク),insertimage,url|" +
 			  "link,ハイパーリンク,createlink,url|" +
 			  "unlink,ハイパーリンクの解除,Remove Hyperlink,|" +
@@ -349,8 +357,6 @@
 		$(sizing).hide();
 		imageToolbox(editor);
 	
-		//draggable text box
-		textBox(editor)
     };
 
     //===============
@@ -367,6 +373,7 @@
         ["disable", disable],
         ["execCommand", execCommand],
         ["focus", focus],
+		//["focused", focused],
         ["hidePopups", hidePopups],
         ["sourceMode", sourceMode, true],
         ["refresh", refresh],
@@ -519,6 +526,559 @@
 
                 }
 
+				//insert textbox
+				else if(buttonName === "textbox"){
+
+					// Wire up the submit button click event handler
+                    $popup.children("div")
+                        .off(CLICK)
+                        .on(CLICK, function (e) {
+						// Build the html
+						var frameBody=editor.$frame.contents().find("body"),
+							scrTop=$(frameBody).scrollTop(),
+							value = $(e.target).css("background-color"),
+							html = "<textarea style='position:relative;top:"+scrTop
+									+"px;left:0px;width:100px;height:20px;background-color:"
+									+value+";'></textarea>&#10;";
+						
+						// Insert the html
+						if (html)
+						{	
+							execCommand(editor,data.command,html,null,data.button);
+						}
+
+						var frameBody=editor.$frame.contents().find("body");
+					
+						//mouse down event
+						$(frameBody).on("dblclick","textarea",function(e)
+						{
+							Mousedown(e,editor,"textarea");
+							
+							$(frameBody).on("mouseleave","textarea",function(e){
+								$(e.target).css("cursor","default");
+								$(frameBody).css("cursor","default");
+							});
+							
+							$(frameBody).on("click","textarea",function(e){
+								if(isDrag==false)
+								{
+									$(e.target).css("cursor","default");
+									$(frameBody).css("cursor","default");
+								}
+							});
+						});
+						hidePopups();
+                        focus(editor);
+						return false;
+					});
+				}
+
+				//insert table
+				else if(buttonName === "table")
+				{	
+					
+					$(popup).children(":button")
+						.off("click")
+						.on("click",function(e) {
+
+						// Get the column and row count
+						var $text = $(popup).find(":text"),
+							cols = parseInt($text[0].value),
+							rows = parseInt($text[1].value);
+
+						// Build the html
+						var html;
+						if (cols > 0 && rows > 0) {
+							html="&#10;<table style='border-collapse:collapse;border:1px solid black;"
+									+"background-color:white;position:relative;top:0px;left:0px'>&#10;";
+							for (y = 0; y < rows; y++) {
+								html += "&#09;<tr>";
+								for (x = 0; x < cols; x++)
+									html += "<td style='border:1px solid black;min-width:30px;height:15px'></td>";
+								html += "</tr>&#10;";
+							}
+							html += "</table>&#10;<br />&#10;";
+						} 
+
+						// Insert the html
+						if (html)
+						{	
+							execCommand(editor,data.command,html,null,data.button);
+
+						}
+
+						///to dragable
+						var x,y,ix="",iy="",divX,divY,eX,eY;
+						
+						var isDrag=false;
+						var obj;
+						//mouse down event
+						var frameBody=editor.$frame.contents().find("body");
+						$(frameBody).off("dblclick").on("dblclick","table",tdown);
+
+						//fire when mouse down
+						function tdown(e) {
+							isDrag=true;
+							if(ix=="" || iy=="" )
+							{
+								obj=$(e.target).is("table") ? e.target : $(e.target).closest("table");
+								divX=$(obj).offset().left;
+								divY=$(obj).offset().top;
+								var divW=$(obj).width();
+								var divH=$(obj).height();
+								var html="<div class='divTable' style='position:absolute;top:"+divY+"px;left:"+divX+"px;width:"
+									+divW+"px;height:"+divH+"px;border:2px solid blue;opacity:0.6;background-color:blue'></div>";
+								$(frameBody).append(html);
+								
+								//get relative position
+								ix=$(obj).css("left")!="auto" ? parseInt($(obj).css("left")) : 0;
+								iy=$(obj).css("top")!="auto" ? parseInt($(obj).css("top")) : 0;
+								x = e.pageX;
+								y = e.pageY;
+								
+							}
+							//move event
+							$(frameBody).on("mousemove",".divTable",tmove);
+							
+						}
+
+						//fire when mouse move
+						function tmove(e) {
+							if(isDrag==true)
+							{
+								//prevent default event
+								e.preventDefault();
+								
+								//to prevent display error dialog in ie11
+								if(window.navigator.userAgent.indexOf("rv:11")!=-1)$(obj).trigger('mouseup');
+								
+								//trace mouse
+								$(e.target).css({"top":e.pageY - y + divY +"px","left":e.pageX - x  + divX + "px"});
+								eX=e.pageX;
+								eY=e.pageY;
+								
+								//mouse up or mouse leave event
+								$(e.target).on("mouseup",tup);
+								$(frameBody).on("mouseleave",".divTable",tup);
+							}
+						}
+
+						//fire when mouse up
+						function tup(e) {
+							if(isDrag==true)
+							{
+								//remove event handler
+								$(frameBody).off("mousemove",tmove);
+								$(frameBody).off("mouseleave",tup);
+								$(e.target).off("mouseup",tup);
+								isDrag=false;
+								$(obj).css({"left":eX-x+ix+"px","top":eY-y+iy+"px"});
+								
+								ix=iy="";
+								setTimeout(function(){
+									$(frameBody).find(".divTable").remove();
+									editor.updateTextArea();//update iframe
+								},10);
+							}
+						}
+
+						//change icon
+						$(frameBody).on("dblclick","table",function(e){
+							$(e.target).css("cursor","move");
+						});
+						
+						$(frameBody).on("mouseleave","table",function(e){
+							$(e.target).css("cursor","default");
+							$(frameBody).css("cursor","default");
+						});
+						
+						$(frameBody).on("click","table",function(e){
+							if(isDrag==false)
+							{
+								$(e.target).css("cursor","default");
+								$(frameBody).css("cursor","default");
+							}
+						});
+						
+						// Reset the text, hide the popup and set focus
+						$text.val("4");
+						editor.hidePopups();
+						editor.focus();
+						return false;
+					});
+				}
+				
+				//insert rows and columns in table
+				else if (buttonName === "insertrowcol")
+				{
+					$(popup).children(":button")
+						.off("click")
+						.on("click",function(e) {
+							// Get insert position
+							var radi=$(popup).find("input[name='insertFR']:checked");
+							
+							// Get the column and row count
+							var $text = $(popup).find(":text"),
+								cols = parseInt($text[0].value),
+								rows = parseInt($text[1].value);
+							
+							//Click event
+							var frameBody=editor.$frame.contents().find("body");
+							editor.$frame.contents().on("click",function(e)
+							{
+								if($(e.target).closest("table").length==1)
+								{
+									var html;
+									//insert columns part
+									if(cols>0)
+									{
+										html="<td style='"+$(e.target).attr("style")+";min-width:2em'></td>";
+										
+										//Get current column index
+										var c=parseInt($(e.target).closest("tr").children().index(e.target));
+										
+										//loop each tr
+										var targetTable=$(e.target).closest("table");
+										
+										$(targetTable).find("tr").each(function(idx,elem)
+										{
+											if($(radi).val()==="front")
+											{//front
+												//insert columns
+												for(var i=0;i<cols;i++)
+												{									
+													$(elem).find("td:nth-child("+(1+c)+")").before(html);
+												}
+											}
+											else
+											{//rear
+												//insert columns
+												for(var i=0;i<cols;i++)
+												{
+													$(elem).find("td:nth-child("+(1+c)+")").after(html);
+												}
+											}	
+										});
+									}
+									
+									//insert rows part
+									if(rows>0)
+									{
+										//Get current row
+										var thisTr=$(e.target).closest("tr");
+										var r=parseInt($(thisTr).closest("table").find("tr").index());
+										
+										//Get column number
+										var cs=$(thisTr).find("td").length;
+										html="&#09;<tr style='"+$(thisTr).attr("style")+"'>";
+										$(thisTr).find("td").each(function(idx,elem)
+										{
+											html+="<td style='"+$(elem).attr("style")+";min-height:1em'></td>";
+										});
+										html+="</tr>&#10;";
+										
+										if($(radi).val()==="front")
+										{//front
+											//insert columns
+											for(var i=0;i<rows;i++)
+											{
+												$(thisTr).before(html);
+											}
+										}
+										else
+										{//rear
+											//insert columns
+											for(var i=0;i<rows;i++)
+											{
+												$(thisTr).after(html);
+											}
+										}
+									}
+									
+								}
+								//off event -- cancel when click except table (include td)
+								editor.$frame.contents().off("click");
+							});
+							// Reset the text
+							$text.val("0");
+							editor.hidePopups();
+							editor.focus();
+							return false;
+						});
+				}
+				
+				//resize cell
+				else if (buttonName === "resizecell")
+				{
+					$(popup).children(":button")
+						.off("click")
+						.on("click",function(e) {
+							// Get the column and row count
+							var $text = $(popup).find(":text"),
+								wid = parseInt($text[0].value),
+								hei = parseInt($text[1].value);
+							
+							//Click event
+							
+							editor.$frame.contents().on("click",function(e)
+							{
+								if($(e.target).is("td"))
+								{
+									//change width size
+									if(wid>0)
+									{
+										$(e.target).css("min-width",wid+"px");
+										editor.updateTextArea();//update iframe
+									}
+									//change height size
+									if(hei>0)
+									{
+										$(e.target).css("height",hei+"px");
+										editor.updateTextArea();//update iframe
+									}
+									
+								}
+								//off event -- cancel when click except table (include td)
+								editor.$frame.contents().off("click");
+							});
+							
+							// Reset the text
+							$text.val("0");	
+							editor.hidePopups();
+							editor.focus();
+							return false;
+						});
+				}
+
+				//border style
+				else if (buttonName === "borderstyle")
+				{
+					var borderColor,bdColor;
+
+					$(popup).find(".colorpicker")
+						.off("click")
+						.on("click",function(e){
+
+						var rgbColor=$(e.target).css("background-color")!="transparent" ?
+										$(e.target).css("background-color") : "0,0,0,0";
+						borderColor=$(popup).find(".bordersample").css("border-color");
+						var rgb=rgbColor.replace("rgb(","").replace("rgba(","").replace(")","").split(",");
+						
+						$(popup).find(".rgbaColor.r").val(parseInt(rgb[0]));
+						$(popup).find(".rgbaColor.g").val(parseInt(rgb[1]));
+						$(popup).find(".rgbaColor.b").val(parseInt(rgb[2]));
+						$(popup).find(".rgbaColor.a").val(rgb.length!=3 ? 0 : 1 );
+						bdColor="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+ (rgb.length!=3 ? 0 : 1)+")";
+						
+						$(popup).find(".samplecolor").css("background-color",bdColor);				
+
+						// Get the which positions are change
+						var cb = $(popup).find("input[type=checkbox]");
+						
+						//switch background color visibility by checkbox
+						if($(cb[0]).prop("checked")==true)
+						{
+							$(popup).find(".bordersample").css("border-color",bdColor);
+						}
+						else
+						{
+							$(popup).find(".bordersample").css("border-color","");
+						}
+						
+					});
+
+					//drag and drop
+					dndImage(".bordersample",popup);//sampleimage
+					
+					//on change RGBA number
+					$(popup).children(".rgbaColor")
+						.on("change", function (e) {
+								bdColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()
+										+","+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+							
+								$(popup).find(".samplecolor").css("background-color",bdColor);
+							});
+
+					//on change Check Box 
+					$(popup)
+						.on("change","input[type=checkbox]", function (e) {
+								// Get the which positions are change
+								var cb = $(popup).find("input[type=checkbox]");
+								
+								//switch background color or image visibility by checkbox
+								if($(cb[0]).prop("checked")==true)
+								{
+									$(popup).find(".bordersample").css("border-color",bdColor);
+								}
+								else
+								{
+									$(popup).find(".bordersample").css("border-color","");
+								}
+								
+								if($(cb[1]).prop("checked")==true)
+								{
+									$(popup).find(".bordersample").css("border-image","url('"+imageObj+"')");
+								}
+								else
+								{
+									$(popup).find(".bordersample").css("border-image","");
+								}
+							});
+
+					// Wire up the submit button click event handler
+					$(popup).children(":button")
+						.off("click")
+						.on("click", function (e) {
+
+							// Get the which positions are change
+							var cb = $(popup).find("input[type=checkbox]"),
+								sl = $(popup).find("select");
+							bdColor=$(".bordersample").css("border-color");
+							
+							if(iege11 && bdColor=="")
+							{
+								bdColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()+","
+										+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+							}
+							editor.$frame.contents().on("click",function(e)
+							{
+								if($(e.target).is("td") || $(e.target).is("hr") 
+								|| $(e.target).is("img") || $(e.target).is("textarea") || $(e.target).is("input"))
+								{
+									var	baseStyle=$(sl[0]).val()+" "+$(sl[1]).val()+" "+bdColor;
+									
+									$(cb).each(function(idx,item){
+										if($(item).prop("checked")==true)
+											$(e.target).css($(item).val(),baseStyle);
+									});	
+									editor.updateTextArea();//update iframe
+								}
+								//off event -- cancel when click except table (include td,hr,img)
+								editor.$frame.contents().off("click");
+							});
+							editor.hidePopups();
+							editor.focus();
+							return false;
+						});
+				}
+
+				//Changes background image and color
+				else if (buttonName === "background")
+				{
+					var imageObj,bgColor;
+						
+					
+					//Get clicked color code 
+					$(popup).find(".colorpicker")
+						.off("click")
+						.on("click", function (e) {
+
+							//Get the background-color from color picker
+							var rgbColor=$(e.target).css("background-color")!="transparent" ?
+											$(e.target).css("background-color") : "0,0,0,0";
+							bgColor=$(popup).find(".samplecolor").css("background-color");
+							var rgb=rgbColor.replace("rgb(","").replace("rgba(","").replace(")","").split(",");
+							
+							$(popup).find(".rgbaColor.r").val(parseInt(rgb[0]));
+							$(popup).find(".rgbaColor.g").val(parseInt(rgb[1]));
+							$(popup).find(".rgbaColor.b").val(parseInt(rgb[2]));
+							$(popup).find(".rgbaColor.a").val(rgb.length!=3 ? 0 : 1 );
+							bgColor="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+ (rgb.length!=3 ? 0 : 1)+")";
+							
+							$(popup).find(".samplecolor").css("background-color",bgColor);
+							
+							// Get the which positions are change
+							var cb = $(popup).find("input[type=checkbox]");
+							
+							//switch background color visibility by checkbox
+							if($(cb[0]).prop("checked")==true)
+							{
+								$(popup).find(".syncBackground").css("background-color",bgColor);
+							}
+							else
+							{
+								$(popup).find(".syncBackground").css("background-color","");
+							}
+						});
+						
+					//drag and drop
+					imageObj=dndImage(".sampleimage",$(popup));
+					
+					//on change RGBA number
+					$(popup).children(".rgbaColor")
+						.on("change", function (e) {
+								bgColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()
+										+","+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+							
+								$(popup).find(".samplecolor").css("background-color",bgColor);
+							});
+					
+					//on change Check Box 
+					$(popup)
+						.on("change","input[type=checkbox]", function (e) {
+								// Get the which positions are change
+								var cb = $(popup).find("input[type=checkbox]");
+								
+								//switch background color or image visibility by checkbox
+								if($(cb[0]).prop("checked")==true)
+								{
+									$(popup).find(".syncBackground").css("background-color",bgColor);
+								}
+								else
+								{
+									$(popup).find(".syncBackground").css("background-color","");
+								}
+								
+								if($(cb[1]).prop("checked")==true)
+								{
+									$(popup).find(".syncBackground").css("background-image","url('"+imageObj+"')");
+								}
+								else
+								{
+									$(popup).find(".syncBackground").css("background-image","");
+								}
+							});
+					
+					//Submit
+					$(popup).find("input[value='Submit']") //children(":button")
+						.off("click")
+						.on("click", function (e) {
+						
+							// Get the which positions are change
+							var cb = $(popup).find("input[type=checkbox]");
+							
+							if(iege11 && bgColor=="")
+							{
+								bgColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()+","
+										+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+							}
+							//Apply the image to cell
+							editor.$frame.contents().on("click",function(e)
+							{	
+								if($(e.target).is("td") || $(e.target).is("hr") 
+								|| $(e.target).is("img") || $(e.target).is("textarea") || $(e.target).is("input"))
+								{	
+									if($(cb[0]).prop("checked")==true)
+									{
+										$(e.target).css("background-color",bgColor);
+									}	
+									if($(cb[1]).prop("checked")==true)
+									{
+										var imageURL=$(".syncBackground").css("background-image");
+										$(e.target).css("background-image",imageURL);
+									}
+									
+									editor.updateTextArea();//update iframe
+								}
+								//off event -- cancel when click except table (include td)
+								editor.$frame.contents().off("click");
+							});
+							editor.hidePopups();
+							editor.focus();
+							return false;
+						});
+				}
+
                 // Show the popup if not already showing for this button
                 if (buttonDiv !== $.data(popup, BUTTON)) {
                     showPopup(editor, popup, buttonDiv);
@@ -562,7 +1122,7 @@
         var editor = this,
             popup = e.data.popup,
             target = e.target;
-
+	
         // Check for message and prompt popups
         if (popup === popups.msg || $(popup).hasClass(PROMPT_CLASS))
             return;
@@ -594,12 +1154,7 @@
             //else useCSS = true;
             useCSS = true;
         }
-		else if (buttonName ==='textbox'){
-			value = hex(target.style.backgroundColor);
-			hidePopups();
-			focus(editor);
-		}
-		
+
         // Fire the popupClick event
         var data = {
             editor: editor,
@@ -611,13 +1166,12 @@
             value: value,
             useCSS: useCSS
         };
-
+	
         if (button.popupClick && button.popupClick(e, data) === false)
-            return;
-
+			return;
         // Execute the command
-        if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, buttonDiv))
-            return false;
+        else if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, buttonDiv))
+			return false;
 
         // Hide the popup and focus the editor
         hidePopups();
@@ -797,6 +1351,127 @@
             popupTypeClass = PROMPT_CLASS;
         }
 
+		//Insert table
+		else if (popupName === "table") {
+			$popup.html(
+				'<label>列:<input type="text" value="4" style="width:40px"></label>&nbsp;&nbsp;' +//columns
+				'<label>行:<input type="text" value="4" style="width:40px"></label>' +//rows
+				'<br /><input type="button" value="Submit">'
+			);
+			//popupTypeClass = PROMPT_CLASS;
+		}
+
+		//Insert rows and columns in table
+		else if (popupName === "insertrowcol") {
+			$popup.html(
+				'<label><input type="radio" value="front" name="insertFR" checked>前に挿入</label>'+//insert in front of element
+				'<label><input type="radio" value="rear" name="insertFR">後に挿入</label><br>'+//insert in rear of element'
+				'<label><input type="text" class="insertRC" value="0" style="width:40px">列を挿入</label>&nbsp;&nbsp;' +//insert columns
+				'<label><input type="text" class="insertRC" value="0" style="width:40px">行を挿入</label>' +//insert rows
+				//'<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
+				'<br /><input type="button" value="Submit">'
+			);
+			popupTypeClass = PROMPT_CLASS;
+		}
+
+		//Resize cell in table
+		else if (popupName === "resizecell") {
+			$popup.html(
+				'変更しない場合は0<br>'+//0 is no change
+				'<label>幅<input type="text" class="resizeWH" value="0" style="width:40px">px</label>&nbsp;&nbsp;' +//width
+				'<label>高さ<input type="text" class="resizeWH" value="0" style="width:40px">px</label>' +//height
+				//'<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
+				'<br /><input type="button" value="Submit">'
+			);
+			popupTypeClass = PROMPT_CLASS;
+		}
+
+		// Custom Color for border
+        else if (popupName === "borderstyle") {
+			$popup.html('<label><input type="checkbox" name="bordertop" value="border-top" checked>上</label>&nbsp;'+//top
+				'<label><input type="checkbox" name="borderleft" value="border-left" checked>左</label>&nbsp;'+//left
+				'<label><input type="checkbox" name="borderright" value="border-right" checked>右</label>&nbsp;'+//right
+				'<label><input type="checkbox" name="borderbottom" value="border-bottom" checked>下</label><br>'+//bottom
+				
+				'<label>線種<select class="borderStyle" onchange="$(\'.bordersample\').css(\'border-style\',$(this).val())"><br>' +//line type
+				'<option value="solid" selected>実線</option>' +//solid
+				'<option value="dotted">点線</option>' +//dotted
+				'<option value="dashed">破線</option>' +//dashed
+				'<option value="double">二重線</option>' +//double
+				
+				'</select></label><br>' +
+				'<label>太さ<select class="borderWidth"  onchange="$(\'.bordersample\').css(\'border-top-width\',$(this).val())">' +//line width
+				'<option value="1px" selected>1px</option>' +
+				'<option value="2px">2px</option>' +
+				'<option value="3px">3px</option>' +
+				'<option value="4px">4px</option>' +
+				'<option value="6px">6px</option>' +
+				'</select></label><br>');
+            var colors = options.colors.split(" ");
+            if (colors.length < 10)
+                $popup.width("auto");
+			var colorDiv = $('<div class="cleditorColor" ></div>');
+			$.each(colors, function (idx, color) {
+                $(DIV_TAG).appendTo($(colorDiv))
+                    .css(BACKGROUND_COLOR, "#" + color)
+					.addClass("colorpicker");
+            });
+			$(colorDiv).append('<div class="colorpicker" style="text-align:center;width:148px;height:14px;background-color:transparent;border:1px solid black">Transparent</div>' );
+			$($popup).append($(colorDiv));
+			$($popup).append(
+				'R<input type="number" class="rgbaColor r" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
+				'G<input type="number" class="rgbaColor g" min=0 max=255 style="width:4em"><br>' +
+				'B<input type="number" class="rgbaColor b" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
+				'A<input type="number" class="rgbaColor a" min=0 max=1 step=0.01 style="width:4em"><br>' +
+				'Border Color<br>' +
+				'<div class="samplecolor" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
+				'Border Image<br>' +
+				'<div class="sampleimage" style="text-align:center;width:140px;height:14px;border:1px solid black;color:gray;font-size:9pt" title="Drop Image file">Drop image file to window</div>' +
+				'<label><input type="checkbox" value="background-color" checked>Background color</label><br>' + //Enable background color 
+				'<label><input type="checkbox" value="background-image" checked>Background image</label><br>' + //Enable background image 
+								
+				'<label style="display:block">Sample&nbsp;<hr class="bordersample" style="display:inline-block;border-style:solid;border-width:0px;border-top-width:1px;border-color:black;width:50px"></label>' +
+				'<br>Submit押下後にセルをクリック<br>Click taget cell after `Submit` press.'+
+				'<br /><input type="button" value="Submit">'				
+				 );
+			$($popup).css({"word-braek":"break-word","width":"150px"});
+            popupTypeClass = PROMPT_CLASS;
+        }
+		
+		//Custom color for background
+		else if (popupName === "background") {
+			var colors = options.colors.split(" ");
+            if (colors.length < 10)
+                $popup.width("auto");
+			var colorDiv = $('<div class="cleditorColor" ></div>');
+			$.each(colors, function (idx, color) {
+                $(DIV_TAG).appendTo($(colorDiv))
+                    .css(BACKGROUND_COLOR, "#" + color)
+					.addClass("colorpicker");
+            });
+			$(colorDiv).append('<div class="colorpicker" style="text-align:center;width:148px;height:14px;background-color:transparent;border:1px solid black">Transparent</div>' );
+			$($popup).append($(colorDiv));
+			$($popup).append(
+				'R<input type="number" class="rgbaColor r" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
+				'G<input type="number" class="rgbaColor g" min=0 max=255 style="width:4em"><br>' +
+				'B<input type="number" class="rgbaColor b" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
+				'A<input type="number" class="rgbaColor a" min=0 max=1 step=0.01 style="width:4em"><br>' +
+				'Background Color<br>' +
+				'<div class="samplecolor" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
+				'Background Image<br>' +
+				'<div class="sampleimage" style="text-align:center;width:140px;height:14px;border:1px solid black;color:gray;font-size:9pt" title="Drop Image file">Drop image file to window</div>' +
+				'<label><input type="checkbox" value="background-color" checked>Background color ON</label><br>' + //Enable background color 
+				'<label><input type="checkbox" value="background-image" checked>Background image ON</label><br>' + //Enable background image 
+				'Smaple<br>' +
+				'<div class="syncBackground" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
+				'<br>Submit押下後にセルをクリック<br>Click taget cell after `Submit` press.'+
+				'<br><input type="button" value="Submit">');
+			$($popup).css({"word-braek":"break-word","width":"150px"});
+				popupTypeClass = PROMPT_CLASS;
+		}
+
+
+		
         // Add the popup type class name
         if (!popupTypeClass && !popupContent)
             popupTypeClass = LIST_CLASS;
@@ -847,7 +1522,7 @@
 
     // execCommand - executes a designMode command
     function execCommand(editor, command, value, useCSS, button) {
-
+		
         // Restore the current ie selection
         restoreRange(editor);
 
@@ -877,41 +1552,8 @@
         // Execute the command and check for error
         var inserthtml = command.toLowerCase() === "inserthtml";
 		
-		//insert textbox
-		if(command == "textbox"){
-			var selection = getSelection(editor);
-			//if selection was already made, change background color.
-			//if($(selection).is("textarea"))
-			{
-			//	editor.doc.execCommand('backColor',0,value);
-			}
-			//make new textarea
-			//else
-			{
-				// Build the html
-				var frameBody=editor.$frame.contents().find("body");
-				var scrTop=$(frameBody).scrollTop();
-                var html = "<textarea style='position:relative;top:"+scrTop+"px;left:0px;width:100px;height:20px;background-color:"
-						+value+";'></textarea>&#10;";
-						
-				// Insert the html
-                if (html)
-				{	
-					if(iege11)
-					{//ie11
-						range = selection.getRangeAt(0);
-						range.insertNode(range.createContextualFragment(html));
-						selection.addRange(range)
-					}
-					else
-					{//chrome
-						editor.doc.execCommand('insertHTML',false,html);
-					}
-				}
-			}
-		}
 
-        else if (iege11 && inserthtml) {
+		if (iege11 && inserthtml) {
             var selection = getSelection(editor),
 			//if(selection.rangeCount!=0)
 			//{
@@ -1046,6 +1688,11 @@
         return success;
 
     }
+
+	//focused -previous focus object
+	function focused(editor)
+	{
+	}
 
     // focus - sets focus to either the textarea or iframe
     function focus(editor) {
@@ -1296,7 +1943,10 @@
             }
             else if ((inSourceMode || iOS) && button.name !== "source") 
                 enabled = false;
-            else if (command && command !== "print" && command !=="textbox") { //change
+            else if (command && command !== "print" 
+						&& command !=="textbox" && command !=="table" 
+						&& command !=="insertrowcol" && command !== "resizecell" 
+						&& command !=="borderstyle" && command !== "background" ) { //change
 				if ((!iege11)  || command !== "inserthtml") {
                     try { enabled = queryObj.queryCommandEnabled(command); }
                     catch (err) { enabled = false; }
@@ -1336,7 +1986,7 @@
     function selectedHTML(editor) {
         restoreRange(editor);
         var range = getRange(editor);
-        var layer = $("<layer>")[0];
+        var layer = $("<div>")[0];
         layer.appendChild(range.cloneContents());
         var html = layer.innerHTML;
         layer = null;
@@ -1502,7 +2152,7 @@
 	{
 		var targetImg,
 			doneAry=[],
-			imgSizing=$(editor.$main).find(".cleditorSizing");
+			imgSizing=editor.$main.find(".cleditorSizing");
 		
 		//change icon when mouse enter and leave 
 		$("body").off("mouseenter").on("mouseenter",$(imgSizing),function(e){
@@ -1516,8 +2166,8 @@
 			$("body").css("cursor","default");
 		});
 		
-		//change icon on image
-		editor.$frame.contents().find("body").on("mouseenter","img",function(e){
+		//change icon on image in dragging
+		editor.$frame.contents().find("body").on("dblclick","img",function(e){
 			editor.$frame.contents().find("img").css("cursor","move");
 		});
 		
@@ -1526,15 +2176,18 @@
 		});
 				
 		//Event:double click --- pop up resize image window 
-		editor.$frame.contents().find("body").on("dblclick","img",function(e)
+		editor.$frame.contents().find("body").on("click","img",function(e)
 		{
-			isDrag=false;//stop image dragging
-			targetImg=this;
-			if(positionX=="")positionX=editor.$frame.width()/2+editor.$frame.position().left;
-			if(positionY=="")positionY=editor.$frame.height()/2+editor.$frame.position().top;
-			$(imgSizing).css({"top":positionY+"px","left":positionY+"px"}).show();
-			doneAry=[];
-			$(imgSizing).find(".butCancel").prop("disabled",true);
+			if(e.originalEvent.ctrlKey==true)//ctrl
+			{
+				isDrag=false;//stop image dragging
+				targetImg=this;
+				if(positionX=="")positionX=editor.$frame.width()/2+editor.$frame.position().left;
+				if(positionY=="")positionY=editor.$frame.height()/2+editor.$frame.position().top;
+				$(imgSizing).css({"top":positionY+"px","left":positionY+"px"}).show();
+				doneAry=[];
+				$(imgSizing).find(".butCancel").prop("disabled",true);
+			}
 		});
 
 		//prevent keep dragging
@@ -1564,8 +2217,9 @@
 			}
 			else if(radioVal=="zoom")
 			{
-				var rate=parseFloat($("#zoom").val())/100;
-				$(targetImg).css({"width":"","height":"","zoom":rate});
+				var rate=parseFloat(editor.$main.find("input[name=zoom]").val())/100;
+				
+				$(targetImg).css({"width":"","height":"","-ms-zoom":rate,"zoom":rate});
 			}
 			else if(radioVal=="reset")
 			{
@@ -1576,7 +2230,6 @@
 		});
 		
 		//click cancel button
-		//$(document).on("click","#butCancel",function()
 		editor.$main.on("click",".butCancel",function()
 		{
 			var i=doneAry.length;
@@ -1594,7 +2247,6 @@
 		});
 		
 		//click close
-		//$(document).on("click","#butClose",function(){$(sizing).hide()});
 		editor.$main.on("click",".butClose",function(){$(imgSizing).hide()});
 		
 		//Event:paste
@@ -1691,7 +2343,7 @@
 				}
 				else
 				{//move image(Not file)
-					imgmdown(e);
+					//imgmdown(e);
 				}
 			});
 			
@@ -1700,7 +2352,7 @@
 				e.preventDefault();
 				if(e.originalEvent.dataTransfer.files.length==0)
 				{//move image
-					imgmmove(e);
+					//imgmmove(e);
 				}
 			});
 			
@@ -1749,7 +2401,7 @@
 			var imgx,imgy,orimX,orimY;
 			
 			//mouse down event
-			$(frameBody).on("mousedown","img",imgmdown);
+			$(frameBody).on("dblclick","img",imgmdown);
 						
 			//fire when mouse down on image
 			function imgmdown(e) {
@@ -1882,7 +2534,7 @@
 				var imgx="",imgy="",orimX,orimY;
 				
 				//mouse down event
-				$(frameBody).on("mousedown","img",imgmdown);
+				$(frameBody).on("dblclick","img",imgmdown);
 							
 				//fire when mouse down on image
 				function imgmdown(e) {
@@ -1933,31 +2585,67 @@
 			});
 		}
 	}
-	
-	//for draggable textbox 
-	function textBox(editor)
+	//common function when drag and drop image file for background or border.
+	function dndImage(targetName,popup)
 	{
-		var frameBody=$(editor.$frame[0]).contents().find("body");
-		
-		//mouse down event
-		$(frameBody).on("dblclick","textarea",function(e)
+		//Drag and Drop
+		var draggingFile;
+
+		//Event:drag start ---- pass to dataTransfer
+		$("body").on("dragstart",$(popup).find(".colorpicker"),function(e)
 		{
-			Mousedown(e,editor,"textarea");
-			
-			$(frameBody).on("mouseleave","textarea",function(e){
-				$(e.target).css("cursor","default");
-				$(frameBody).css("cursor","default");
-			});
-			
-			$(frameBody).on("click","textarea",function(e){
-				if(isDrag==false)
-				{
-					$(e.target).css("cursor","default");
-					$(frameBody).css("cursor","default");
-				}
-			});
+			if(e.originalEvent.dataTransfer.files.length!=0)
+			{//drag image file
+				draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
+			}
 		});
 		
+		$("body").on("dragover",$(popup).find(".colorpicker"),function(e)
+		{
+			e.preventDefault();
+		});
 		
+		//Event:drop
+		$(document).on("drop",popup,function(e)
+		{
+			e.preventDefault();
+			e.stopPropagation();
+			if(e.originalEvent.dataTransfer.files.length!=0)
+			{	
+				//get from dataTransfer
+				var file=e.originalEvent.dataTransfer.files[0];
+				var file_reader = new FileReader();//API
+				
+				//ater file read
+				file_reader.onloadend = function(e){
+
+					// when error occur
+					if(file_reader.error) return;
+
+					//hide div tag used in image drop
+					if(window.navigator.userAgent.indexOf("rv:11")!=-1)$(".cleditorCatcher").hide();
+					
+					var imageObj=file_reader.result;
+					
+					//apply image to sample 
+					$(targetName).css("background-image","url('"+imageObj+"')");
+					
+					// Get the which positions are change
+					var cb = $(popup).find("input[type=checkbox]");
+				
+					//switch background image visibility by checkbox
+					if($(cb[1]).prop("checked")==true)
+					{
+						$(popup).find(".syncBackground").css("background-image","url('"+imageObj+"')");
+					}
+					else
+					{
+						$(popup).find(".syncBackground").css("background-image","");
+					}
+				}
+				file_reader.readAsDataURL(file);
+			}
+		});
 	}
+
 })(jQuery);
