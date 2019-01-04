@@ -11,9 +11,17 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.D
+<ul>
+	<li> Integration with <a href="#cleditor_tablecustom">jquery.cleditor.table.custom.js</a>.</li>
+	<li> Unification of changing  drag-mode by double click. (<a href="#operation">See this</a>)
+	<li> Enable to apply image to background with textbox.
+	<li> Note: Application border image is still disabled.
+</ul>
 Ver.C
 <ul>
 	<li> Integration with <a href="#cleditor_textbox">jquery.cleditor.textbox.js</a>.</li>
+
 </ul>
 Ver.B
 <ul>
@@ -45,6 +53,17 @@ Ver.A
 ```javascript
 $( id of same textarea as cleditor).cleditor();  
 ```
+
+<a name="oparation"> - Operation </a>
+  
+  To draggable mode 
+  - Double click turns draggable mode on object.
+  - Valid objects are image, textbox and table.
+  
+  (This change is for simplify and prevents unexpected action)
+  
+  To show resize window
+  - CTRL + click on image.
 
 <a href="cleditor.demo.html">Sample is here.</a>
 
@@ -174,7 +193,7 @@ Modify code
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- images<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>textbox.gif</em><br>
 ***
-# <a href="jquery.cleditor.table.custom.js">jquery.cleditor.table.custom.js</a><br>
+# <a href="jquery.cleditor.table.custom.js" namem="cleditor_tablecustom">jquery.cleditor.table.custom.js</a><br>
 <br>
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
