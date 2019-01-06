@@ -13,9 +13,10 @@ plug-in about javascript/jQuery<br>
 
 Ver.E
 <ul>
-	<li> Enable to apply image to border/background with textbox & body.
-	<li> Enable to apply gradational color to border/background with textbox ,image(border only) & body.
+	<li> Enable to apply image to border/background with textbox, HR(border only) & body.
+	<li> Enable to apply gradational color to border/background with textbox,HR(border only) ,image(border only) & body.
 	<li> Enable to apply solid color to background with body.
+	<li> Note:HR is hard to click. Please try few times.
 </ul>
 
 Ver.D
