@@ -14,6 +14,7 @@
  * modify ver.C Y.Urita 2019. 1. 2 Integration with jquery.cleditor.textbox.js, a littele improvement.
  * modify ver.D Y.Urita 2019. 1. 4 Integration with jquery.cleditor.table.custom.js,
  *								   Organization selection way of drag-mode to double click. and a littele improvement.
+ * modify ver.E Y.Urita 2019. 1. 6 Improvement about borer & background drawing.
  */
  
 (function ($) {
@@ -33,7 +34,7 @@
                           "style | color highlight removeformat | bullets numbering | outdent " +
                           "indent | alignleft center alignright justify | undo redo | " +
                           "rule | textbox | table insertrowcol resizecell | borderstyle background | " +
-						  "image link unlink | cut copy paste pastetext | print source",
+						  "image link unlink | cut copy paste pastetext | print bodystyle source",
             colors:       // colors in the color popup
                           "FFF FCC FC9 FF9 FFC 9F9 9FF CFF CCF FCF " +
                           "CCC F66 F96 FF6 FF3 6F9 3FF 6FF 99F F9F " +
@@ -104,8 +105,9 @@
 			  "copy,コピー|" +
 			  "paste,ペースト|" +
 			  "pastetext,テキストとして貼り付け,inserthtml,|" +
-			  "print,印刷,print|" +
-			  "source,ソース表示と切り替え"
+			  "print,印刷,print,|" +
+			  "bodystyle,BodyのStyleSheet,bodystyle,bodystyle,bodystyle.gif|" +//StyleSheet of Body
+			  "source,ソース表示と切り替え" 
         },
 
         // imagesPath - returns the path to the images folder
@@ -227,7 +229,7 @@
             popupName: items[3] === "" ? name : items[3],
 			image: items[4] === undefined ? undefined : items[4] //addition for icon image file
         };
-		
+
     });
     delete buttons.init;
 
@@ -315,10 +317,10 @@
                 $group.width(groupWidth + 1);
 
                 // Prepare the button image
-                var map = {},offset=0;
+                var map = {};
                 if (button.css) map = button.css;
                 else if (button.image) map.backgroundImage = imageUrl(button.image);
-				if (button.stripIndex ) map.backgroundPosition = button.stripIndex * -24 + offset;
+				if (button.stripIndex ) map.backgroundPosition = button.stripIndex * -24 ;
 				$buttonDiv.css(map);
 
                  // Create the popup
@@ -356,7 +358,7 @@
 		$main.append(sizing);
 		$(sizing).hide();
 		imageToolbox(editor);
-	
+
     };
 
     //===============
@@ -853,8 +855,9 @@
 				//border style
 				else if (buttonName === "borderstyle")
 				{
-					var borderColor,bdColor;
-
+					var borderColor,bdColor,bdImage,
+						cbs = $(popup).find(".appobj");
+						
 					$(popup).find(".colorpicker")
 						.off("click")
 						.on("click",function(e){
@@ -888,43 +891,117 @@
 					});
 
 					//drag and drop
-					dndImage(".bordersample",popup);//sampleimage
+					dndImage(".sampleimage",".bordersample",popup);//sampleimage
 					
 					//on change RGBA number
-					$(popup).children(".rgbaColor")
-						.on("change", function (e) {
-								bdColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()
-										+","+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+					$(popup).find(".rgbaColor")
+						.on("change input paste", function (e) {
+							bdColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()
+									+","+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
+						
+							$(popup).find(".samplecolor").css("background-color",bdColor);
 							
-								$(popup).find(".samplecolor").css("background-color",bdColor);
-							});
-
+							if($(cbs[0]).prop("checked")==true)
+								$(popup).find(".bordersample").css("border-color",bdColor);
+						});
+						
+					//on change Select tag
+					$(popup).find(".border")
+						.on("change",function(e){
+							// Get the which positions are ON
+							var cb = $(popup).find("input[type=checkbox]");
+							
+							//color
+							for(var i=0;i<4;i++)
+							{
+								if($(cbs[0]).prop("checked")==true)
+								{
+									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-style",$(popup).find(".border.Style").val());
+									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-width",$(popup).find(".border.Width").val());
+								}
+								else
+								{
+									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-style","");
+									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-width","");
+								}
+							}
+						});
+						
 					//on change Check Box 
 					$(popup)
 						.on("change","input[type=checkbox]", function (e) {
-								// Get the which positions are change
-								var cb = $(popup).find("input[type=checkbox]");
-								
-								//switch background color or image visibility by checkbox
-								if($(cb[0]).prop("checked")==true)
-								{
-									$(popup).find(".bordersample").css("border-color",bdColor);
-								}
-								else
-								{
-									$(popup).find(".bordersample").css("border-color","");
-								}
-								
-								if($(cb[1]).prop("checked")==true)
-								{
-									$(popup).find(".bordersample").css("border-image","url('"+imageObj+"')");
-								}
-								else
+							// Get the which positions are change
+							var cb=$(popup).find("input[type=checkbox]");
+							
+							//switch background color or image visibility by checkbox
+							
+							for(var i=0;i<4;i++){
+								//color
+								if($(cbs[0]).prop("checked")==true)
 								{
 									$(popup).find(".bordersample").css("border-image","");
+									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-color",bdColor);
 								}
-							});
-
+								else
+								{
+									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-color","");
+								}
+								
+								//image
+								if($(cbs[1]).prop("checked")==true)
+								{
+									$(popup).find(".bordersample").css("border-image-source","url('"+imageObj+"')");
+								}
+								else
+								{
+									$(popup).find(".bordersample").css("border-image-source","");
+								}
+							}
+						});
+					
+					//on change check Box of image type 
+					$(popup)
+						.on("change input","input[type=radio],.imageOptions", function (e) {
+							if($(cbs[1]).prop("checked")==true)
+							{
+								//check selection with URL or Gradient
+								if($(popup).find("input[type=radio]:checked").val()=="url" 
+									&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
+									&& $(cbs[1]).prop("checked")==true)
+								{//URL
+									$(popup).find(".bordersample").css("border-image","");
+									$(popup).find(".bordersample").css("border-image-source",
+										$(popup).find(".sampleimage").css("background-image"));
+									$(popup).find(".bordersample").css("border-image-slice",
+										$(popup).find(".imageOptions[name='slice']").val());
+									$(popup).find(".bordersample").css("border-image-width",
+										$(popup).find(".imageOptions[name='width']").val());
+									$(popup).find(".bordersample").css("border-image-outset",
+										$(popup).find(".imageOptions[name='outset']").val());
+									$(popup).find(".bordersample").css("border-image-repeat",
+										$(popup).find(".imageOptions[name='repeat']").val());
+								}
+								else if($(cbs[1]).prop("checked")==true)
+								{//Gradient
+									$(popup).find(".bordersample").css("border-image-source","");
+									$(popup).find(".bordersample").css("border-image",
+										($(popup).find(".imageOptions[name='repeat']").val()=="repeat" ?
+											"repeating-linear-gradient(" : "linear-gradient(") +
+										$(popup).find(".imageOptions[name='angle']").val() + "deg," +
+										$(popup).find(".imageOptions[name='colors']").val() +")");
+										
+									$(popup).find(".bordersample").css("border-image-slice",
+										$(popup).find(".imageOptions[name='slice']").val());
+									$(popup).find(".bordersample").css("border-image-width",
+										$(popup).find(".imageOptions[name='width']").val());
+									$(popup).find(".bordersample").css("border-image-outset",
+										$(popup).find(".imageOptions[name='outset']").val());
+									$(popup).find(".bordersample").css("border-image-repeat",
+										$(popup).find(".imageOptions[name='repeat']").val());
+								}
+							}
+						});
+							
 					// Wire up the submit button click event handler
 					$(popup).children(":button")
 						.off("click")
@@ -933,24 +1010,74 @@
 							// Get the which positions are change
 							var cb = $(popup).find("input[type=checkbox]"),
 								sl = $(popup).find("select");
-							bdColor=$(".bordersample").css("border-color");
+							bdColor=$(popup).find(".bordersample").css("border-color");
 							
 							if(iege11 && bdColor=="")
 							{
-								bdColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()+","
-										+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+								bdColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()+","
+										+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
 							}
 							editor.$frame.contents().on("click",function(e)
 							{
 								if($(e.target).is("td") || $(e.target).is("hr") 
 								|| $(e.target).is("img") || $(e.target).is("textarea") || $(e.target).is("input"))
 								{
-									var	baseStyle=$(sl[0]).val()+" "+$(sl[1]).val()+" "+bdColor;
-									
-									$(cb).each(function(idx,item){
-										if($(item).prop("checked")==true)
-											$(e.target).css($(item).val(),baseStyle);
+									//color:top,right,bottom,left
+									$(cb).each(function(idx,item)
+									{
+										if($(item).prop("checked")==true && idx<4)
+										{
+											//color
+											if($(cbs[0]).prop("checked")==true)
+											{
+												$(e.target).css("border-image","");
+												$(e.target).css("border-"+$(cb[idx]).val()+"-color",bdColor);
+												$(e.target).css("border-"+$(cb[idx]).val()+"-style",$(popup).find(".border.Style").val());
+												$(e.target).css("border-"+$(cb[idx]).val()+"-width",$(popup).find(".border.Width").val());
+											}
+											else
+											{
+												$(e.target).css($(cb[idx]).val(),"");
+											}
+										}
 									});	
+									
+									//image
+									if($(popup).find("input[type=radio]:checked").val()=="url" 
+										&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
+										&& $(cbs[1]).prop("checked")==true)
+									{//url
+										$(e.target).css("border-image","");
+										$(e.target).css("border-image-source",
+											$(popup).find(".sampleimage").css("background-image"));
+										$(e.target).css("border-image-slice",
+											$(popup).find(".imageOptions[name='slice']").val());
+										$(e.target).css("border-image-width",
+											$(popup).find(".imageOptions[name='width']").val());
+										$(e.target).css("border-image-outset",
+											$(popup).find(".imageOptions[name='outset']").val());
+										$(e.target).css("border-image-repeat",
+											$(popup).find(".imageOptions[name='repeat']").val());
+									}
+									else if($(cbs[1]).prop("checked")==true)
+									{//gradient
+										$(e.target).css("border-image-source","");
+										$(e.target).css("border-image",
+											($(popup).find("input[name='repeat']:selected").val()=="repeat" ?
+												"repeating-linear-gradient(" : "linear-gradient(") +
+											$(popup).find(".imageOptions[name='angle']").val() + "deg," +
+											$(popup).find(".imageOptions[name='colors']").val() +")");
+											
+										$(e.target).css("border-image-slice",
+											$(popup).find(".imageOptions[name='slice']").val());
+										$(e.target).css("border-image-width",
+											$(popup).find(".imageOptions[name='width']").val());
+										$(e.target).css("border-image-outset",
+											$(popup).find(".imageOptions[name='outset']").val());
+										$(e.target).css("border-image-repeat",
+											$(popup).find("input[name='repeat']:selected").val());
+									}
+
 									editor.updateTextArea();//update iframe
 								}
 								//off event -- cancel when click except table (include td,hr,img)
@@ -965,8 +1092,8 @@
 				//Changes background image and color
 				else if (buttonName === "background")
 				{
-					var imageObj,bgColor;
-						
+					var imageObj,bgColor,
+						cbs = $(popup).find(".appobj");	
 					
 					//Get clicked color code 
 					$(popup).find(".colorpicker")
@@ -1002,13 +1129,13 @@
 						});
 						
 					//drag and drop
-					imageObj=dndImage(".sampleimage",$(popup));
+					dndImage(".sampleimage",".syncBackground",$(popup));
 					
 					//on change RGBA number
-					$(popup).children(".rgbaColor")
+					$(popup).find(".rgbaColor")
 						.on("change", function (e) {
-								bgColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()
-										+","+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+								bgColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()
+										+","+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
 							
 								$(popup).find(".samplecolor").css("background-color",bgColor);
 							});
@@ -1017,10 +1144,9 @@
 					$(popup)
 						.on("change","input[type=checkbox]", function (e) {
 								// Get the which positions are change
-								var cb = $(popup).find("input[type=checkbox]");
 								
 								//switch background color or image visibility by checkbox
-								if($(cb[0]).prop("checked")==true)
+								if($(cbs[0]).prop("checked")==true)
 								{
 									$(popup).find(".syncBackground").css("background-color",bgColor);
 								}
@@ -1029,7 +1155,7 @@
 									$(popup).find(".syncBackground").css("background-color","");
 								}
 								
-								if($(cb[1]).prop("checked")==true)
+								if($(cbs[1]).prop("checked")==true)
 								{
 									$(popup).find(".syncBackground").css("background-image","url('"+imageObj+"')");
 								}
@@ -1038,44 +1164,123 @@
 									$(popup).find(".syncBackground").css("background-image","");
 								}
 							});
-					
+							
+					//on change check Box of image type 
+					$(popup)
+						.on("change input","input[type=radio],.imageOptions", function (e) {
+								
+							var imageOptions=$(popup).find(".imageOptions[name='repeat']");	
+								//check selection with URL or Gradient
+								if($(popup).find("input[type=radio]:checked").val()=="url" 
+									&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
+									&& $(cbs[1]).prop("checked")==true)
+								{//url
+									$(popup).find(".syncBackground").css("background","");
+									$(popup).find(".syncBackground").css("background-image",
+										$(popup).find(".sampleimage").css("background-image"));
+									if($(imageOptions).val()=="cover" || $(imageOptions).val()=="contain")
+									{
+										$(popup).find(".syncBackground").css("background-size",
+											$(imageOptions).val());
+									}
+									else
+									{
+										$(popup).find(".syncBackground").css("background-repeat",
+											$(imageOptions).val());
+									}
+								}
+								else if($(cbs[1]).prop("checked")==true)
+								{//gradient
+									$(popup).find(".syncBackground").css("background-image","");
+									$(popup).find(".syncBackground").css("background",
+										($(popup).find(".imageOptions[name='repeat']").val()=="repeat" ?
+											"repeating-linear-gradient(" : "linear-gradient(") +
+										$(popup).find(".imageOptions[name='angle']").val() + "deg," +
+										$(popup).find(".imageOptions[name='colors']").val() +")");
+								}
+							});
+							
 					//Submit
-					$(popup).find("input[value='Submit']") //children(":button")
+					$(popup).find("input[type='button']") //children(":button")
 						.off("click")
 						.on("click", function (e) {
-						
-							// Get the which positions are change
-							var cb = $(popup).find("input[type=checkbox]");
+							bgColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()+","
+									+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
 							
-							if(iege11 && bgColor=="")
+							//forced fire when button was 'Apply to body'
+							if($(e.target).prop("class")==".toBody")
 							{
-								bgColor="rgba("+$(".rgbaColor.r").val()+","+$(".rgbaColor.g").val()+","
-										+$(".rgbaColor.b").val()+","+$(".rgbaColor.a").val()+")";
+								drawBackground(editor.$frame.contents().find("body"));
 							}
+							
 							//Apply the image to cell
 							editor.$frame.contents().on("click",function(e)
-							{	
-								if($(e.target).is("td") || $(e.target).is("hr") 
-								|| $(e.target).is("img") || $(e.target).is("textarea") || $(e.target).is("input"))
+							{
+								drawBackground(e.target);
+							});
+							
+							//common draw procedure
+							function drawBackground(target)
+							{
+								if($(target).is("td") || $(target).is("hr") || $(target).is("body")
+								|| $(target).is("img") || $(target).is("textarea") || $(target).is("input"))
 								{	
-									if($(cb[0]).prop("checked")==true)
+									if($(cbs[0]).prop("checked")==true)
 									{
-										$(e.target).css("background-color",bgColor);
+										$(target).css("background","");
+										$(target).css("background-color",bgColor);
 									}	
-									if($(cb[1]).prop("checked")==true)
-									{
-										var imageURL=$(".syncBackground").css("background-image");
-										$(e.target).css("background-image",imageURL);
-									}
 									
+									var imageOptions=$(popup).find(".imageOptions[name='repeat']");	
+									
+									if($(popup).find("input[type=radio]:checked").val()=="url" 
+										&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
+										&& $(cbs[1]).prop("checked")==true)
+									{//url
+										$(target).css("background","");
+										$(target).css("background-image",
+											$(popup).find(".sampleimage").css("background-image"));
+										if($(imageOptions).val()=="cover" || $(imageOptions).val()=="contain")
+											$(target).css("background-size",$(imageOptions).val());
+										else
+											$(target).css("background-repeat",$(imageOptions).val());
+									}
+									else if($(cbs[1]).prop("checked")==true)
+									{//gradient
+										$(target).css("background-image","");
+										$(target).css("background",
+											($(popup).find(".imageOptions[name='repeat']").val()=="repeat" ?
+												"repeating-linear-gradient(" : "linear-gradient(") +
+											$(popup).find(".imageOptions[name='angle']").val() + "deg," +
+											$(popup).find(".imageOptions[name='colors']").val() +")");
+
+									}
 									editor.updateTextArea();//update iframe
 								}
+								
+								
 								//off event -- cancel when click except table (include td)
 								editor.$frame.contents().off("click");
-							});
+							}
+							
 							editor.hidePopups();
 							editor.focus();
 							return false;
+						});
+				}
+				
+				//body style
+				else if (buttonName === "bodystyle")
+				{
+					//insert style of body
+					$(popup).find("textarea").val(editor.$frame.contents().find("body").attr("style"));
+					//Submit
+					$(popup).find("input[type='button']") //children(":button")
+						.off("click")
+						.on("click", function (e) {
+							editor.hidePopups();
+							editor.focus();
+							return false;				
 						});
 				}
 
@@ -1089,7 +1294,8 @@
                 return;
 
             }
-
+			
+			
             // Print
             else if (buttonName === "print")
                 editor.$frame[0].contentWindow.print();
@@ -1354,8 +1560,8 @@
 		//Insert table
 		else if (popupName === "table") {
 			$popup.html(
-				'<label>列:<input type="text" value="4" style="width:40px"></label>&nbsp;&nbsp;' +//columns
-				'<label>行:<input type="text" value="4" style="width:40px"></label>' +//rows
+				'<label>Columns:<input type="text" value="4" style="width:40px"></label>&nbsp;&nbsp;' +//columns
+				'<label>Rows:<input type="text" value="4" style="width:40px"></label>' +//rows
 				'<br /><input type="button" value="Submit">'
 			);
 			//popupTypeClass = PROMPT_CLASS;
@@ -1364,48 +1570,52 @@
 		//Insert rows and columns in table
 		else if (popupName === "insertrowcol") {
 			$popup.html(
-				'<label><input type="radio" value="front" name="insertFR" checked>前に挿入</label>'+//insert in front of element
-				'<label><input type="radio" value="rear" name="insertFR">後に挿入</label><br>'+//insert in rear of element'
-				'<label><input type="text" class="insertRC" value="0" style="width:40px">列を挿入</label>&nbsp;&nbsp;' +//insert columns
-				'<label><input type="text" class="insertRC" value="0" style="width:40px">行を挿入</label>' +//insert rows
-				//'<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
+				'<label><input type="radio" value="front" name="insertFR" checked>Insert in front of object.</label><br>'+//insert in front of element
+				'<label><input type="radio" value="rear" name="insertFR">Insert in back of object.</label><br>'+//insert in rear of element'
+				'<label><input type="text" class="insertRC" value="0" style="width:40px">Insert columns</label>&nbsp;&nbsp;' +//insert columns
+				'<label><input type="text" class="insertRC" value="0" style="width:40px">Insert rows</label>' +//insert rows
+				'<br>Submit後にセルをクリック<br>Click taget cell after `Submit` press'+
 				'<br /><input type="button" value="Submit">'
 			);
+			$($popup).css({"word-braek":"break-word","width":"150px"});
 			popupTypeClass = PROMPT_CLASS;
 		}
 
 		//Resize cell in table
 		else if (popupName === "resizecell") {
 			$popup.html(
-				'変更しない場合は0<br>'+//0 is no change
-				'<label>幅<input type="text" class="resizeWH" value="0" style="width:40px">px</label>&nbsp;&nbsp;' +//width
-				'<label>高さ<input type="text" class="resizeWH" value="0" style="width:40px">px</label>' +//height
-				//'<br>Submit押下後にセルをクリック'+//Click taget cell after `Submit` press.
+				'変更しない場合は0<br>Input `0` if you don\'t want.<br>'+//0 is no change
+				'<label>Width<input type="text" class="resizeWH" value="0" style="width:40px">px</label>&nbsp;&nbsp;' +//width
+				'<label>Height<input type="text" class="resizeWH" value="0" style="width:40px">px</label>' +//height
+				'<br>Submit後にセルをクリック<br>Click taget cell after `Submit` press' +
 				'<br /><input type="button" value="Submit">'
 			);
+			$($popup).css({"word-braek":"break-word","width":"150px"});
 			popupTypeClass = PROMPT_CLASS;
 		}
 
 		// Custom Color for border
         else if (popupName === "borderstyle") {
-			$popup.html('<label><input type="checkbox" name="bordertop" value="border-top" checked>上</label>&nbsp;'+//top
-				'<label><input type="checkbox" name="borderleft" value="border-left" checked>左</label>&nbsp;'+//left
-				'<label><input type="checkbox" name="borderright" value="border-right" checked>右</label>&nbsp;'+//right
-				'<label><input type="checkbox" name="borderbottom" value="border-bottom" checked>下</label><br>'+//bottom
+			$popup.html('<label><input type="checkbox" name="bordertop" value="top" checked>Top</label>&nbsp;'+//top
+				'<label><input type="checkbox" name="borderbottom" value="bottom" checked>Bottom</label><br>'+//bottom
+				'<label><input type="checkbox" name="borderleft" value="left" checked>Left</label>&nbsp;'+//left
+				'<label><input type="checkbox" name="borderright" value="right" checked>Right</label><br>'+//right
 				
-				'<label>線種<select class="borderStyle" onchange="$(\'.bordersample\').css(\'border-style\',$(this).val())"><br>' +//line type
-				'<option value="solid" selected>実線</option>' +//solid
-				'<option value="dotted">点線</option>' +//dotted
-				'<option value="dashed">破線</option>' +//dashed
-				'<option value="double">二重線</option>' +//double
+				'<label>Line style<select class="border Style" ><br>' +//line type
+				'<option value="solid" selected>Solid</option>' +//solid
+				'<option value="dotted">Dotted</option>' +//dotted
+				'<option value="dashed">Dashed</option>' +//dashed
+				'<option value="double">Double</option>' +//double
 				
 				'</select></label><br>' +
-				'<label>太さ<select class="borderWidth"  onchange="$(\'.bordersample\').css(\'border-top-width\',$(this).val())">' +//line width
+				'<label>Line weight<select class="border Width">' +//line width
 				'<option value="1px" selected>1px</option>' +
 				'<option value="2px">2px</option>' +
 				'<option value="3px">3px</option>' +
 				'<option value="4px">4px</option>' +
 				'<option value="6px">6px</option>' +
+				'<option value="10px">10px</option>' +
+				'<option value="15px">15px</option>' +
 				'</select></label><br>');
             var colors = options.colors.split(" ");
             if (colors.length < 10)
@@ -1423,15 +1633,40 @@
 				'G<input type="number" class="rgbaColor g" min=0 max=255 style="width:4em"><br>' +
 				'B<input type="number" class="rgbaColor b" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
 				'A<input type="number" class="rgbaColor a" min=0 max=1 step=0.01 style="width:4em"><br>' +
+				
 				'Border Color<br>' +
 				'<div class="samplecolor" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
 				'Border Image<br>' +
 				'<div class="sampleimage" style="text-align:center;width:140px;height:14px;border:1px solid black;color:gray;font-size:9pt" title="Drop Image file">Drop image file to window</div>' +
-				'<label><input type="checkbox" value="background-color" checked>Background color</label><br>' + //Enable background color 
-				'<label><input type="checkbox" value="background-image" checked>Background image</label><br>' + //Enable background image 
-								
-				'<label style="display:block">Sample&nbsp;<hr class="bordersample" style="display:inline-block;border-style:solid;border-width:0px;border-top-width:1px;border-color:black;width:50px"></label>' +
-				'<br>Submit押下後にセルをクリック<br>Click taget cell after `Submit` press.'+
+				
+				'<label><input type="checkbox" class="appobj" value="background-color" title="Use border-color instead of image which was invalid value." checked>Border color ON</label><br>' + //Enable background color 
+				'<div style="border-width:1px;border-color:green;border-style:solid;width:150px">' +
+				'<label><input type="checkbox" class="appobj" value="background-image" >Border image ON</label><br>' + //Enable background image 
+				'<div style="width:150px;padding-left:10px">' +
+				'<label><input type="radio" name="imagetype" value="url" checked>ByURL</label>' +
+				'<label><input type="radio" name="imagetype" value="gradient">ByGradation</label></div>' +
+				
+				'Slice<input type="text" class="imageOptions" name="slice" style="width:30px" value="1" title="In gradient case set 1 usually. In URL case specify slice width for nine regions."><br>' +
+				'Width<input type="text" class="imageOptions" name="width" style="width:90px" title="Top Right Bottom Left[px]" value="1px 1px 1px 1px"><br>' +
+				'Outset<input type="text" class="imageOptions" name="outset" style="width:90px" title="Top Right Bottom Left[px]" value="0px 0px 0px 0px"><br>' + 
+				'Repeat<select name="repeat" class="imageOptions" value="repeat" style="width:90px"><option value="repeat" selected>Repeat</option>' +
+				'<option value="no-repeat">No repeat</option>' +
+				'<option value="round">Round</option>' +
+				'<option value="stretch">Stretch</option>' +
+				'<option value="space">Space</option></select><br>' +
+				
+				'<div style="background-image:linear-gradient(0deg,rgba(255,0,0,0.5),rgba(0,255,0,0.5))">' +
+				'Angle(Gradient only)<input type="number" name="angle" min="-360" max="360" step=1 class="imageOptions" ' +
+				'value="0" title="The gradation angle.[Clockwise] 0 deg is bottom to top." style="width:60px">degrees<br>' +
+				'Colors(Gradient only)<input type="text" name="colors" class="imageOptions" value="red,green,blue"><br>' +
+				'</div></div>' +
+				
+				//'<label style="display:block">Sample&nbsp;<hr class="bordersample" style="display:inline-block;border-style:solid;border-width:0px;border-top-width:1px;border-color:black;width:50px"></label>' +
+				//'<label style="display:block">Sample&nbsp;<table class="bordersample" '+
+				'Sample<br><table style="border-collapse:border-collapse;"><tr><td class="bordersample" '+
+				'style="border-style:solid;border-width:1px;border-color:black;width:90px;height:10px">' +
+				'</td></tr></table>' +
+				'<br>Submit後に対象をクリック<br>Click taget object after `Submit` press.'+
 				'<br /><input type="button" value="Submit">'				
 				 );
 			$($popup).css({"word-braek":"break-word","width":"150px"});
@@ -1460,17 +1695,37 @@
 				'<div class="samplecolor" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
 				'Background Image<br>' +
 				'<div class="sampleimage" style="text-align:center;width:140px;height:14px;border:1px solid black;color:gray;font-size:9pt" title="Drop Image file">Drop image file to window</div>' +
-				'<label><input type="checkbox" value="background-color" checked>Background color ON</label><br>' + //Enable background color 
-				'<label><input type="checkbox" value="background-image" checked>Background image ON</label><br>' + //Enable background image 
+				'<label><input type="checkbox" class="appobj" value="background-color" checked>Background color ON</label><br>' + //Enable background color 
+				'<div style="border-width:1px;border-color:green;border-style:solid;width:150px">' +
+				'<label><input type="checkbox" class="appobj" value="background-image">Background image ON</label><br>' + //Enable background image 
+				'<div style="width:150px;padding-left:10px"><label><input type="radio" name="imagetype" value="url" checked>ByURL</label>' +
+				'<label><input type="radio" name="imagetype" value="gradient">ByGradation</label></div>' + //Enable background image 
+				'Repeat/Zoom<select name="repeat" class="imageOptions" value="repeat" style="width:90px"><option value="repeat" selected>Repeat</option>' +
+				'<option value="no-repeat">No repeat</option>' +
+				'<option value="repeat-x">Repeat only X direction</option>' +
+				'<option value="repeat-y">Repeat only Y direction</option>' +
+				'<option value="cover">[Cover]Fit with no margin, but image will be cut.(URL only)</option>' +
+				'<option value="contain">[Contain]Fit with any margin, but image is flawless.(URL only)</select>' +
+				//'<div style="border-width:1px;border-image:linear-gradient(0deg,red,blue);border-image-slice:1;border-style:solid;width:146px">' +
+				'Angle(Gradient only)<input type="number" name="angle" min="-360" max="360" step=1 class="imageOptions" ' +
+				'value="0" title="The gradation angle.[Clockwise] 0 deg is bottom to top." style="width:60px">degrees<br>' +
+				'Colors(Gradient only)<input type="text" name="colors" class="imageOptions" value="red,green,blue"><br>' +
+				'</div>' +
+				
 				'Smaple<br>' +
 				'<div class="syncBackground" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
-				'<br>Submit押下後にセルをクリック<br>Click taget cell after `Submit` press.'+
-				'<br><input type="button" value="Submit">');
+				'<br>Submit後に対象をクリック<br>Click taget object after `Submit` press.'+
+				'<br><input type="button" value="Submit" class="submit"><input type="button" value="Apply to body" class=".toBody">');
 			$($popup).css({"word-braek":"break-word","width":"150px"});
 				popupTypeClass = PROMPT_CLASS;
 		}
-
-
+		
+		//display body style sheet
+		else if (popupName === "bodystyle") {
+			$($popup).append('<textarea style="min-width:150px;height:100px"></textarea><br><input type="button" value="Close">');
+			popupTypeClass = PROMPT_CLASS;
+		}
+		
 		
         // Add the popup type class name
         if (!popupTypeClass && !popupContent)
@@ -1946,7 +2201,8 @@
             else if (command && command !== "print" 
 						&& command !=="textbox" && command !=="table" 
 						&& command !=="insertrowcol" && command !== "resizecell" 
-						&& command !=="borderstyle" && command !== "background" ) { //change
+						&& command !=="borderstyle" && command !== "background" 
+						&& command !=="bodystyle") { //change
 				if ((!iege11)  || command !== "inserthtml") {
                     try { enabled = queryObj.queryCommandEnabled(command); }
                     catch (err) { enabled = false; }
@@ -2586,7 +2842,7 @@
 		}
 	}
 	//common function when drag and drop image file for background or border.
-	function dndImage(targetName,popup)
+	function dndImage(targetName,targetSample,popup)
 	{
 		//Drag and Drop
 		var draggingFile;
@@ -2628,19 +2884,25 @@
 					var imageObj=file_reader.result;
 					
 					//apply image to sample 
-					$(targetName).css("background-image","url('"+imageObj+"')");
+					$(popup).find(targetName).css("background-image","url('"+imageObj+"')");
 					
 					// Get the which positions are change
-					var cb = $(popup).find("input[type=checkbox]");
+					var cb = $(popup).find(".appobj")//find("input[type=checkbox]");
 				
 					//switch background image visibility by checkbox
 					if($(cb[1]).prop("checked")==true)
 					{
-						$(popup).find(".syncBackground").css("background-image","url('"+imageObj+"')");
+						if($(popup).find(targetSample).is("table"))
+							$(popup).find(targetSample).css("border-image-source","url('"+imageObj+"')");
+						else
+							$(popup).find(targetSample).css("background-image","url('"+imageObj+"')");
 					}
 					else
 					{
-						$(popup).find(".syncBackground").css("background-image","");
+						if($(popup).find(targetSample).is("table"))
+							$(popup).find(targetSample).css("border-image-source","");
+						else
+							$(popup).find(targetSample).css("background-image","");
 					}
 				}
 				file_reader.readAsDataURL(file);
