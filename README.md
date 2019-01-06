@@ -11,6 +11,13 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.E
+<ul>
+	<li> Enable to apply image to border/background with textbox & body.
+	<li> Enable to apply gradational color to border/background with textbox ,image(border only) & body.
+	<li> Enable to apply solid color to background with body.
+</ul>
+
 Ver.D
 <ul>
 	<li> Integration with <a href="#cleditor_tablecustom">jquery.cleditor.table.custom.js</a>.</li>
@@ -67,6 +74,14 @@ $( id of same textarea as cleditor).cleditor();
   To show resize window
   - CTRL + click on image.
 
+- Image file <br>
+  put icon files on image folder as below.<br>
+  
+\------ jquery.cleditor.js<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- jquery.cleditor.textbox.js<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- images<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|-- <em>(all gif files in images folder on this repo.)</em><br>
+
 <a href="cleditor.demo.html">Sample is here.</a>
 
 ![#ffff00](https://placehold.it/15/ffff00/000000?text=+)
@@ -82,8 +97,8 @@ $( id of same textarea as cleditor).cleditor();
 I have only few ideas in this time.
 
 <ul>
-	<li> Integration with below files. </li>
-	<li> Selectable border style with ruler (HR tag). </li>
+	<li> <s>Integration with below files.</s> </li>
+	<li> Selectable border style with ruler <s>(HR tag)</s>. </li>
 	<li> Selective way of element from 'past setting' to 'previous setting' in images and tables. </li>
 </ul>
 
