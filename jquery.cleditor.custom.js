@@ -2,7 +2,6 @@
  CLEditor WYSIWYG HTML Editor v1.4.5
  http://premiumsoftware.net/CLEditor
  requires jQuery v1.4.2 or later
-
  Copyright 2010, Chris Landowski, Premium Software, LLC
  Dual licensed under the MIT or GPL Version 2 licenses.
 */
@@ -15,6 +14,7 @@
  * modify ver.D Y.Urita 2019. 1. 4 Integration with jquery.cleditor.table.custom.js,
  *								   Organization selection way of drag-mode to double click. and a littele improvement.
  * modify ver.E Y.Urita 2019. 1. 6 Improvement about borer & background drawing.
+ * modify ver.F Y.Urita 2019. 1. 7 Bug fix (Problem not to drag)
  */
  
 (function ($) {
@@ -1426,7 +1426,7 @@
 	//fire when mouse down
 	function Mousedown(e,editor,target) {
 		isDrag=true;
-		var frameBody=editor.$frame.contents().find("body");
+		var frameDocument=editor.$frame.contents().find("body");
 
 		if(positionX=="" && positionY=="")
 		{
@@ -1437,14 +1437,14 @@
 			y = e.pageY - positionY;
 		}
 		//move event
-		$(frameBody).on("mousemove",target,function(ev){Mousemove(ev,editor,target)});
+		$(frameDocument).on("mousemove",target,function(ev){Mousemove(ev,editor,target)});
 	}
 	
 	//fire when mouse move
 	function Mousemove(e,editor,target) {
 		if(isDrag==true)
 		{
-			var frameBody=editor.$frame.contents().find("body");
+			var frameDocument=editor.$frame.contents().find("body");
 			//prevent default event
 			e.preventDefault();
 
@@ -1452,17 +1452,17 @@
 			$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
 			
 			//mouse up or mouse leave event
-			$(frameBody).on("mouseup",e.target,function(ev){Mouseup(ev,editor,target)});
-			$(frameBody).on("mouseleave",target,function(ev){Mouseup(ev,editor,target)});
+			$(frameDocument).on("mouseup",e.target,function(ev){Mouseup(ev,editor,target)});
+			$(frameDocument).on("mouseleave",target,function(ev){Mouseup(ev,editor,target)});
 		}
 	}
 
 	//fire when mouse up
 	function Mouseup(e,editor,target) {
-		var frameBody=editor.$frame.contents().find("body");
+		var frameDocument=editor.$frame.contents().find("body");
 		//remove event handler
-		$(frameBody).off("mousemove",Mousemove);
-		$(frameBody).off("mouseleave",Mouseup);
+		$(frameDocument).off("mousemove",Mousemove);
+		$(frameDocument).off("mouseleave",Mouseup);
 		$(e.target).off("mouseup",Mouseup);
 		isDrag=false;
 		positionX=positionY="";
@@ -1640,8 +1640,10 @@
 				'<div class="sampleimage" style="text-align:center;width:140px;height:14px;border:1px solid black;color:gray;font-size:9pt" title="Drop Image file">Drop image file to window</div>' +
 				
 				'<label><input type="checkbox" class="appobj" value="background-color" title="Use border-color instead of image which was invalid value." checked>Border color ON</label><br>' + //Enable background color 
-				'<div style="border-width:1px;border-color:green;border-style:solid;width:150px">' +
-				'<label><input type="checkbox" class="appobj" value="background-image" >Border image ON</label><br>' + //Enable background image 
+				'<label><input type="checkbox" class="appobj" value="background-image" onclick="$(\'.div_image\').toggle()">' +
+				'Border image ON</label><br>' + //Enable background image 
+
+				'<div class="div_image" style="border-width:1px;border-color:green;border-style:solid;width:150px;display:none">' +
 				'<div style="width:150px;padding-left:10px">' +
 				'<label><input type="radio" name="imagetype" value="url" checked>ByURL</label>' +
 				'<label><input type="radio" name="imagetype" value="gradient">ByGradation</label></div>' +
@@ -1696,8 +1698,9 @@
 				'Background Image<br>' +
 				'<div class="sampleimage" style="text-align:center;width:140px;height:14px;border:1px solid black;color:gray;font-size:9pt" title="Drop Image file">Drop image file to window</div>' +
 				'<label><input type="checkbox" class="appobj" value="background-color" checked>Background color ON</label><br>' + //Enable background color 
-				'<div style="border-width:1px;border-color:green;border-style:solid;width:150px">' +
-				'<label><input type="checkbox" class="appobj" value="background-image">Background image ON</label><br>' + //Enable background image 
+				'<label><input type="checkbox" class="appobj" value="background-image" onclick="$(\'.div_image\').toggle()">' +
+				'Background image ON</label><br>' + //Enable background image 
+				'<div class="div_image" style="border-width:1px;border-color:green;border-style:solid;width:150px;display:none">' +
 				'<div style="width:150px;padding-left:10px"><label><input type="radio" name="imagetype" value="url" checked>ByURL</label>' +
 				'<label><input type="radio" name="imagetype" value="gradient">ByGradation</label></div>' + //Enable background image 
 				'Repeat/Zoom<select name="repeat" class="imageOptions" value="repeat" style="width:90px"><option value="repeat" selected>Repeat</option>' +
@@ -1722,7 +1725,7 @@
 		
 		//display body style sheet
 		else if (popupName === "bodystyle") {
-			$($popup).append('<textarea style="min-width:150px;height:100px"></textarea><br><input type="button" value="Close">');
+			$($popup).append('<textarea style="min-width:150px;height:100px" readonly></textarea><br><input type="button" value="Close">');
 			popupTypeClass = PROMPT_CLASS;
 		}
 		
@@ -2657,7 +2660,7 @@
 			var imgx,imgy,orimX,orimY;
 			
 			//mouse down event
-			$(frameBody).on("dblclick","img",imgmdown);
+			$(frameDocument).on("dblclick","img",imgmdown);
 						
 			//fire when mouse down on image
 			function imgmdown(e) {
@@ -2670,7 +2673,7 @@
 				orimY=e.pageY;
 				
 				//move event
-				$(frameBody).off("mousemove").on("mousemove","img",imgmmove);
+				$(frameDocument).off("mousemove").on("mousemove","img",imgmmove);
 			}
 
 			//fire when mouse move
@@ -2687,17 +2690,17 @@
 					$(e.target).css({"top":Yimg + "px","left":Ximg + "px"});
 					
 					//mouse up or mouse leave event
-					$(frameBody).off("mouseup").on("mouseup",e.target,imgmup);
-					$(frameBody).off("mouseleave").on("mouseleave","img",imgmup);
+					$(frameDocument).off("mouseup").on("mouseup",e.target,imgmup);
+					$(frameDocument).off("mouseleave").on("mouseleave","img",imgmup);
 				}
 			}
 
 			//fire when mouse up
 			function imgmup(e) {
 				//remove event handler
-				$(frameBody).off("mousemove");
-				$(frameBody).off("mouseleave");
-				$(frameBody).off("mouseup");
+				$(frameDocument).off("mousemove");
+				$(frameDocument).off("mouseleave");
+				$(frameDocument).off("mouseup");
 			}
 
 		}
@@ -2726,7 +2729,7 @@
 				$(".cleditorCatcher").hide();
 				
 				//Event:dragstart
-				$(frameBody).on("dragstart",function(e)
+				$(frameDocument).on("dragstart",function(e)
 				{
 					e.preventDefault();
 					e.stopPropagation();
@@ -2741,13 +2744,13 @@
 				});
 				
 				//Event:dragover on catcher's layer
-				$("body").on("dragover",".cleditorCatcher",function(e)
+				$(document).on("dragover",".cleditorCatcher",function(e)
 				{
 					e.preventDefault();
 				});
 				
 				//Event:drop on cacher's layer
-				$("body").on("drop",".cleditorCatcher",function(e)
+				$(document).on("drop",".cleditorCatcher",function(e)
 				{
 					e.preventDefault();
 					e.stopPropagation();
@@ -2781,7 +2784,7 @@
 				});
 				
 				//Event:dragenter on cleditor area
-				$("body").on("dragenter",editor.$main,function(e)
+				$(document).on("dragenter",editor.$main,function(e)
 				{
 					$(".cleditorCatcher").show();
 				});
@@ -2790,7 +2793,7 @@
 				var imgx="",imgy="",orimX,orimY;
 				
 				//mouse down event
-				$(frameBody).on("dblclick","img",imgmdown);
+				$(frameDocument).on("dblclick","img",imgmdown);
 							
 				//fire when mouse down on image
 				function imgmdown(e) {
@@ -2805,7 +2808,7 @@
 					}
 					
 					//move event
-					$(frameBody).on("mousemove","img",imgmmove);
+					$(frameDocument).on("mousemove","img",imgmmove);
 					
 				}
 
@@ -2824,15 +2827,15 @@
 						
 						//mouse up or mouse leave event
 						$(e.target).on("mouseup",imgmup);
-						$(frameBody).on("mouseleave","img",imgmup);
+						$(frameDocument).on("mouseleave","img",imgmup);
 					}
 				}
 
 				//fire when mouse up
 				function imgmup(e) {
 					//remove event handler
-					$(frameBody).off("mousemove",imgmmove);
-					$(frameBody).off("mouseleave",imgmup);
+					$(frameDocument).off("mousemove",imgmmove);
+					$(frameDocument).off("mouseleave",imgmup);
 					$(e.target).off("mouseup",imgmup);
 					isDrag=false;
 					imgx=imgy="";
@@ -2848,7 +2851,7 @@
 		var draggingFile;
 
 		//Event:drag start ---- pass to dataTransfer
-		$("body").on("dragstart",$(popup).find(".colorpicker"),function(e)
+		$(document).on("dragstart",$(popup).find(".colorpicker"),function(e)
 		{
 			if(e.originalEvent.dataTransfer.files.length!=0)
 			{//drag image file
@@ -2856,7 +2859,7 @@
 			}
 		});
 		
-		$("body").on("dragover",$(popup).find(".colorpicker"),function(e)
+		$(document).on("dragover",$(popup).find(".colorpicker"),function(e)
 		{
 			e.preventDefault();
 		});
