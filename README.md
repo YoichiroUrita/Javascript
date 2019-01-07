@@ -11,6 +11,12 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.F
+<ul>
+	<li> Bug fix (Problem not to drag)
+	<li> Enable to toggle image detail setting on border/background. (To simple view)
+</ul>
+
 Ver.E
 <ul>
 	<li> Enable to apply image to border/background with textbox, HR(border only) & body.
