@@ -15,6 +15,7 @@
  *								   Organization selection way of drag-mode to double click. and a littele improvement.
  * modify ver.E Y.Urita 2019. 1. 6 Improvement about borer & background drawing.
  * modify ver.F Y.Urita 2019. 1. 7 Bug fix (Problem not to drag)
+ * modify ver.G Y.Urita 2019. 1. 8 Enable to Z-index control , choose to absolute position.
  */
  
 (function ($) {
@@ -34,7 +35,7 @@
                           "style | color highlight removeformat | bullets numbering | outdent " +
                           "indent | alignleft center alignright justify | undo redo | " +
                           "rule | textbox | table insertrowcol resizecell | borderstyle background | " +
-						  "image link unlink | cut copy paste pastetext | print bodystyle source",
+						  "image link unlink | cut copy paste pastetext | print | perspect bodystyle source",
             colors:       // colors in the color popup
                           "FFF FCC FC9 FF9 FFC 9F9 9FF CFF CCF FCF " +
                           "CCC F66 F96 FF6 FF3 6F9 3FF 6FF 99F F9F " +
@@ -59,7 +60,11 @@
             docCSSFile:   // CSS file used to style the document contained within the editor
                           "",
             bodyStyle:    // style to assign to document body contained within the editor
-                          "margin:4px; font:10pt Arial,Verdana; cursor:text"
+                          "margin:4px; font:10pt Arial,Verdana; cursor:text",
+			position: 'relative' //relative : When you use existed HTML in the middle of document.
+							  //		   (If you choose 'absolute', draggable objects locate on left-top of document. 
+							  //		   Non-draggable objects as text are left in the middle of document.)
+							  //absolute : When you use existed HTML as whole document or in iframe.
         },
 
         // Define all usable toolbar buttons - the init string property is 
@@ -106,6 +111,7 @@
 			  "paste,ペースト|" +
 			  "pastetext,テキストとして貼り付け,inserthtml,|" +
 			  "print,印刷,print,|" +
+			  "perspect,配置,perspect,perspect,perspect.gif|" +
 			  "bodystyle,BodyのStyleSheet,bodystyle,bodystyle,bodystyle.gif|" +//StyleSheet of Body
 			  "source,ソース表示と切り替え" 
         },
@@ -192,6 +198,7 @@
 		y,
 		isDrag=false,
 		draggingFile,
+		zidx=0, //value of z-index
 		sizing=$("<div class='cleditorSizing' style='background-color:#ececec;position:absolute;padding:2px'>"+
 				"<b style='text-align:center;display:block'>Image resizing</b>"+
 				"<label>"+
@@ -539,7 +546,7 @@
 						var frameBody=editor.$frame.contents().find("body"),
 							scrTop=$(frameBody).scrollTop(),
 							value = $(e.target).css("background-color"),
-							html = "<textarea style='position:relative;top:"+scrTop
+							html = "<textarea style='position:"+editor.options.position+";top:"+scrTop
 									+"px;left:0px;width:100px;height:20px;background-color:"
 									+value+";'></textarea>&#10;";
 						
@@ -592,7 +599,7 @@
 						var html;
 						if (cols > 0 && rows > 0) {
 							html="&#10;<table style='border-collapse:collapse;border:1px solid black;"
-									+"background-color:white;position:relative;top:0px;left:0px'>&#10;";
+									+"background-color:white;position:"+position+";top:0px;left:0px'>&#10;";
 							for (y = 0; y < rows; y++) {
 								html += "&#09;<tr>";
 								for (x = 0; x < cols; x++)
@@ -1269,6 +1276,126 @@
 						});
 				}
 				
+				//perspect
+				else if (buttonName === "perspect")
+				{
+					$(popup).find(":button")
+						.off("click")
+						.on("click",function(e) {
+							var perspect=$(e.target).attr("class");
+							
+							//Apply
+							editor.$frame.contents().on("click",function(e)
+							{
+								perspective(e.target,perspect);
+							});
+							
+							editor.hidePopups();
+							editor.focus();
+							return false;
+						});
+						
+					//perspective control
+					function perspective(target,perspect)
+					{
+						var children=editor.$frame.contents().find("body").children(),
+							maxid;
+						zidx=0;
+						$(children).each(function(idx,item)
+						{
+							if($(item).css("z-index")!="auto")
+							{
+								if(zidx <= parseInt($(item).css("z-index")))
+								{
+									zidx=parseInt($(item).css("z-index"));
+									maxid=idx;
+								}
+							}
+							else
+							{
+								$(item).css("z-index",$(children).index(item));
+								if(zidx < parseInt($(children).index(item)))
+								{
+									zidx=parseInt($(children).index(item));
+									maxid=idx;
+								}
+							}
+						});
+						if(perspect =="toFront")
+						{
+							var z=parseInt($(target).css("z-index"));
+							var dz= (zidx - z) < 0 ? 0 : zidx -z ;
+							var pair=maxid;	
+							//check if same value as z was existed
+							if(dz!=0)
+							{
+								$(children).each(function(idx,item)
+								{
+									if(idx != $(children).index(target))
+									{
+										var c = parseInt($(item).css("z-index"));
+										if(dz>c-z && c-z > 0)
+										{
+											dz=c-z;
+											pair=idx;
+										}
+									}
+								});
+								//convert
+								$(target).css("z-index",z+dz);
+								$($(children).get(pair)).css("z-index",z);
+							}
+						}
+						else if(perspect == "toBack")
+						{
+							var z=parseInt($(target).css("z-index"));
+							var dz= z,
+								pair=parseInt($(children).index(target));
+								
+							//check if same value as z was existed
+							if(dz>0)
+							{
+								$(children).each(function(idx,item)
+								{
+									if(idx != $(children).index(target))
+									{
+										var c = parseInt($(item).css("z-index"));
+										if(dz>=z-c && z-c >= 0)
+										{
+											dz=z-c;
+											pair=idx;
+											console.log(z,c,idx);
+										}
+									}
+								});
+								//convert
+								$(target).css("z-index",z - dz);
+								$($(children).get(pair)).css("z-index",z);
+							}
+						}
+						else if(perspect == "toMostFront")
+						{
+							zidx++;
+							$(target).css("z-index",zidx);
+						}
+						else if(perspect == "toMostBack")
+						{
+							$(target).css("z-index",0);
+							
+							$(children).each(function(idx,item)
+							{
+								if(idx != $(children).index(target))
+								{
+									var zz=parseInt($(item).css("z-index"));
+									zz++;
+									$(item).css("z-index",zz);
+								}
+							});
+						}
+						editor.$frame.contents().off("click");
+					}
+				}
+				
 				//body style
 				else if (buttonName === "bodystyle")
 				{
@@ -1391,7 +1518,7 @@
 
 	//fire when mouse down
 	function mdown(e,editor) {
-		//get relative position
+		//get position
 		var imgSizing=$(editor.$main).find(".cleditorSizing");
 
 		x = e.pageX - $(imgSizing).get(0).offsetLeft;
@@ -1430,7 +1557,7 @@
 
 		if(positionX=="" && positionY=="")
 		{
-			//get relative position
+			//get position
 			positionX=$(e.target).css("left")!="auto" ? parseFloat($(e.target).css("left")) : 0;
 			positionY=$(e.target).css("top")!="auto" ? parseFloat($(e.target).css("top")) : 0;
 			x = e.pageX - positionX;
@@ -1721,6 +1848,16 @@
 				'<br><input type="button" value="Submit" class="submit"><input type="button" value="Apply to body" class=".toBody">');
 			$($popup).css({"word-braek":"break-word","width":"150px"});
 				popupTypeClass = PROMPT_CLASS;
+		}
+		
+		//perspect
+		else if (popupName === "perspect")
+		{
+			$($popup).append('<li style="list-style-type:none">' +
+							'<ul style="padding-left:0px"><input type="button" class="toMostFront" value="To the most front"></ul>' +
+							'<ul style="padding-left:0px"><input type="button" class="toFront" value="To the front"></ul>'+
+							'<ul style="padding-left:0px"><input type="button" class="toBack" value="To the back"></ul>' +
+							'<ul style="padding-left:0px"><input type="button" class="toMostBack" value="To the most back"></ul></li>');
 		}
 		
 		//display body style sheet
@@ -2205,7 +2342,7 @@
 						&& command !=="textbox" && command !=="table" 
 						&& command !=="insertrowcol" && command !== "resizecell" 
 						&& command !=="borderstyle" && command !== "background" 
-						&& command !=="bodystyle") { //change
+						&& command !=="bodystyle" && command !== "perspect") { //change
 				if ((!iege11)  || command !== "inserthtml") {
                     try { enabled = queryObj.queryCommandEnabled(command); }
                     catch (err) { enabled = false; }
@@ -2530,7 +2667,7 @@
 							}
 						});
 					var scrTop=editor.$frame.contents().find("body").scrollTop(),
-					html='<img style="top:'+scrTop+':left:0px;position:relative;zoom:1.0;" src="'+base64+'">&#10;';
+					html='<img style="top:'+scrTop+':left:0px;position:'+editor.options.position+';zoom:1.0;" src="'+base64+'">&#10;';
 					editor.doc.execCommand("inserthtml", true, html);
 					return;
 				}
@@ -2551,7 +2688,7 @@
 							context.drawImage(img,0,0);
 							
 							var scrTop=editor.$frame.contents().find("body").scrollTop(),
-								html='<img style="left:0px;top:'+scrTop+'px;zoom:1.0;position:relative" src="'
+								html='<img style="left:0px;top:'+scrTop+'px;zoom:1.0;position:'+editor.options.position+'" src="'
 									+Canvas[0].toDataURL('image/png')+'">&#10;';
 								
 								editor.doc.execCommand("inserthtml", true, html);
@@ -2575,7 +2712,7 @@
 							if($(elem).css("position")!="absolute")
 							{
 								var scrTop=editor.$frame.contents().find("body").scrollTop();
-								$(elem).css({'position':'relative','top':scrTop+'px','zoom':1});
+								$(elem).css({'position':editor.options.position,'top':scrTop+'px','zoom':1});
 								boolExist=true;
 							}
 						});
@@ -2635,7 +2772,7 @@
 						
 						var scrTop=editor.$frame.contents().find("body").scrollTop(),
 
-						html='<img style="'+scrTop+'px;left:0px;position:relative;zoom:1.0" src="'+file_reader.result+'">&#10';
+						html='<img style="'+scrTop+'px;left:0px;position:'+editor.options.position+';zoom:1.0" src="'+file_reader.result+'">&#10';
 						editor.doc.execCommand("inserthtml", true,html);//, data.button);
 						
 						editor.updateTextArea();//update iframe
@@ -2768,7 +2905,7 @@
 							
 							var scrTop=$(frameBody).scrollTop();
 							$(frameBody)
-								.append('<img style="position:relative;top:'+scrTop
+								.append('<img style="position:'+editor.options.position+';top:'+scrTop
 									+'px;zoom:1.0" src="'+file_reader.result+'">');
 							var currentHtml=$(frameBody).html();
 							editor.$area.val(currentHtml);//writting textarea
