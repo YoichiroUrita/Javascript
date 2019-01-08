@@ -11,6 +11,12 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.G
+<ul>
+	<li> Enable to change z-index ( perspective direction of screen )
+	<li> Enable to choose absolute position
+</ul>
+
 Ver.F
 <ul>
 	<li> Bug fix (Problem not to drag)
@@ -67,7 +73,7 @@ Ver.A
 - Javascript/jQuery 
 
 ```javascript
-$( id of same textarea as cleditor).cleditor();  
+$( id of same textarea as cleditor).cleditor({"position":"absolute"});  //Now you can choose absolute position
 ```
 
 <a name="operation"> - Operation </a>
