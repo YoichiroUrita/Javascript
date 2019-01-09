@@ -16,7 +16,7 @@
  * modify ver.E Y.Urita 2019. 1. 6 Improvement about borer & background drawing.
  * modify ver.F Y.Urita 2019. 1. 7 Bug fix (Problem not to drag)
  * modify ver.G Y.Urita 2019. 1. 8 Enable to Z-index control , choose to absolute position.
- * modify ver.H Y.Urita 2019. 1. 9 Enable to rotation
+ * modify ver.H Y.Urita 2019. 1. 9 Enable to rotate
  */
  
 (function ($) {
