@@ -116,7 +116,7 @@ I have only few ideas in this time.
 
 <ul>
 	<li> <s>Integration with below files.</s> </li>
-	<li> Selectable border style with ruler <s>(HR tag)</s>. </li>
+	<li> <s>Selectable border style with ruler</s> <s>(HR tag)</s>. </li>
 	<li> Selective way of element from 'past setting' to 'previous setting' in images and tables. </li>
 </ul>
 
