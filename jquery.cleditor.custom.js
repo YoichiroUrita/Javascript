@@ -17,6 +17,7 @@
  * modify ver.F Y.Urita 2019. 1. 7 Bug fix (Problem not to drag)
  * modify ver.G Y.Urita 2019. 1. 8 Enable to Z-index control , choose to absolute position.
  * modify ver.H Y.Urita 2019. 1. 9 Enable to rotate
+ * modify ver.H'Y.Urita 2019. 1.10 Bug fix (Problem not to drag table)
  */
  
 (function ($) {
@@ -635,8 +636,9 @@
 						var isDrag=false;
 						var obj;
 						//mouse down event
-						var frameBody=editor.$frame.contents().find("body");
-						$(frameBody).off("dblclick").on("dblclick","table",tdown);
+						var frameBody=editor.$frame.contents().find("body"),
+							frameDocument=editor.$frame.contents();
+						$(frameDocument).off("dblclick").on("dblclick","table",tdown);
 
 						//fire when mouse down
 						function tdown(e) {
@@ -660,7 +662,7 @@
 								
 							}
 							//move event
-							$(frameBody).on("mousemove",".divTable",tmove);
+							$(frameDocument).on("mousemove",".divTable",tmove);
 							
 						}
 
@@ -681,7 +683,7 @@
 								
 								//mouse up or mouse leave event
 								$(e.target).on("mouseup",tup);
-								$(frameBody).on("mouseleave",".divTable",tup);
+								$(frameDocument).on("mouseleave",".divTable",tup);
 							}
 						}
 
@@ -690,8 +692,8 @@
 							if(isDrag==true)
 							{
 								//remove event handler
-								$(frameBody).off("mousemove",tmove);
-								$(frameBody).off("mouseleave",tup);
+								$(frameDocument).off("mousemove",tmove);
+								$(frameDocument).off("mouseleave",tup);
 								$(e.target).off("mouseup",tup);
 								isDrag=false;
 								$(obj).css({"left":eX-x+ix+"px","top":eY-y+iy+"px"});
@@ -707,20 +709,20 @@
 						}
 
 						//change icon
-						$(frameBody).on("dblclick","table",function(e){
+						$(frameDocument).on("dblclick","table",function(e){
 							$(e.target).css("cursor","move");
 						});
 						
-						$(frameBody).on("mouseleave","table",function(e){
+						$(frameDocument).on("mouseleave","table",function(e){
 							$(e.target).css("cursor","default");
-							$(frameBody).css("cursor","default");
+							$(frameDocument).css("cursor","default");
 						});
 						
-						$(frameBody).on("click","table",function(e){
+						$(frameDocument).on("click","table",function(e){
 							if(isDrag==false)
 							{
 								$(e.target).css("cursor","default");
-								$(frameBody).css("cursor","default");
+								$(frameDocument).css("cursor","default");
 							}
 						});
 						
