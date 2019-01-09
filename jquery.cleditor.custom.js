@@ -16,6 +16,7 @@
  * modify ver.E Y.Urita 2019. 1. 6 Improvement about borer & background drawing.
  * modify ver.F Y.Urita 2019. 1. 7 Bug fix (Problem not to drag)
  * modify ver.G Y.Urita 2019. 1. 8 Enable to Z-index control , choose to absolute position.
+ * modify ver.H Y.Urita 2019. 1. 9 Enable to rotation
  */
  
 (function ($) {
@@ -34,7 +35,7 @@
                           "bold italic underline strikethrough subscript superscript | font size " +
                           "style | color highlight removeformat | bullets numbering | outdent " +
                           "indent | alignleft center alignright justify | undo redo | " +
-                          "rule | textbox | table insertrowcol resizecell | borderstyle background | " +
+                          "rule | textbox | table insertrowcol resizecell | borderstyle background rotation | " +
 						  "image link unlink | cut copy paste pastetext | print | perspect bodystyle source",
             colors:       // colors in the color popup
                           "FFF FCC FC9 FF9 FFC 9F9 9FF CFF CCF FCF " +
@@ -45,7 +46,7 @@
                           "333 600 930 963 660 060 366 009 339 636 " +
                           "000 300 630 633 330 030 033 006 309 303",
             fonts:        // font names in the font popup
-						  "MS PGothic,ＭＳ Ｐゴシック,Meiryo"+
+						  "MS PGothic,ＭＳ Ｐゴシック,Meiryo,Segoe Script,Microsoft Tai Le,メイリオ,"+
                           "Arial,Arial Black,Comic Sans MS,Courier New,Narrow,Garamond," +
                           "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
             sizes:        // sizes in the font size popup
@@ -103,6 +104,7 @@
 			  "resizecell,セルの幅と高さ,resizecell,resizecell,resizecell.gif|" + //replace Japanese to Resize width and height of cell
 			  "borderstyle,枠線のスタイル,borderstyle,borderstyle,borderstyle.gif|" + //replace Japanese to Border style
 			  "background,背景のスタイル,background,background,cellcolor.gif|" + //replace Japanese to Border style
+			  "rotation,オブジェクトの回転,rotation,rotation,rotation.gif|" + 
 			  "image,画像の挿入(リンク),insertimage,url|" +
 			  "link,ハイパーリンク,createlink,url|" +
 			  "unlink,ハイパーリンクの解除,Remove Hyperlink,|" +
@@ -198,6 +200,7 @@
 		y,
 		isDrag=false,
 		draggingFile,
+		focusedObj,prevObj,
 		zidx=0, //value of z-index
 		sizing=$("<div class='cleditorSizing' style='background-color:#ececec;position:absolute;padding:2px'>"+
 				"<b style='text-align:center;display:block'>Image resizing</b>"+
@@ -366,6 +369,16 @@
 		$(sizing).hide();
 		imageToolbox(editor);
 
+		//observe focus 
+		editor.$frame.contents()
+			.off("click")
+			.on("click",$("body").children(),function(e)
+			{
+				
+				if($(e.target).is("body") || $(e.taget).is("html") || $(e.target).is(document))return false;
+				prevObj=focusedObj;
+				focusedObj=e.target;
+			});
     };
 
     //===============
@@ -382,7 +395,7 @@
         ["disable", disable],
         ["execCommand", execCommand],
         ["focus", focus],
-		//["focused", focused],
+		["focused", focused],
         ["hidePopups", hidePopups],
         ["sourceMode", sourceMode, true],
         ["refresh", refresh],
@@ -599,7 +612,7 @@
 						var html;
 						if (cols > 0 && rows > 0) {
 							html="&#10;<table style='border-collapse:collapse;border:1px solid black;"
-									+"background-color:white;position:"+position+";top:0px;left:0px'>&#10;";
+									+"background-color:white;position:"+editor.options.position+";top:0px;left:0px'>&#10;";
 							for (y = 0; y < rows; y++) {
 								html += "&#09;<tr>";
 								for (x = 0; x < cols; x++)
@@ -686,7 +699,9 @@
 								ix=iy="";
 								setTimeout(function(){
 									$(frameBody).find(".divTable").remove();
+									
 									editor.updateTextArea();//update iframe
+									focusedObj=prevObj=$(obj);
 								},10);
 							}
 						}
@@ -1276,6 +1291,67 @@
 						});
 				}
 				
+				//rotation
+				else if (buttonName === "rotation")
+				{
+					var target="",defX,defY,defD;
+					//target=focusedObj;// ? focusedObj : prevObj;
+						if($(focusedObj)!="" && $(focusedObj)!=undefined)
+							{
+								console.log($(focusedObj).prop("nodeName"),$(focusedObj).prev().prop("nodeName"));
+								if($(focusedObj).is("td") || $(focusedObj).is("th"))
+									focusedObj=$(focusedObj).closest("table");
+								var tempPos=($(focusedObj).css("transform-origin")).split(" "),
+									tempD=$(focusedObj).css("transform");
+								defX=parseInt(tempPos[0]);
+								defY=parseInt(tempPos[1]);
+								var tempH=$(focusedObj).outerHeight(),
+									tempW=$(focusedObj).outerWidth();
+								$(popup).find(".XPosition:nth-child("+(parseInt(defX/tempW*2)+1)+")").prop("selected",true);
+								$(popup).find(".YPosition:nth-child("+(parseInt(defY/tempH*2)+1)+")").prop("selected",true);
+								if(tempD=="none")
+								{
+									defD=0;
+								}
+								else
+								{
+									tempD=tempD.replace("matrix(","");
+									var aryD=tempD.split(",");
+									defD=Math.atan2(parseFloat(aryD[1]),parseFloat(aryD[0]))*180/Math.PI;
+								}
+								$(popup).find(".deg").val(defD);
+							}
+					$(popup)
+						.on("change input",".deg,.XPosition,.YPosition",function(e)
+						{
+							if($(focusedObj)!="" && $(focusedObj)!=undefined &&	!$(focusedObj).is("html") )
+							{	
+								var x=$(popup).find(".XPosition").val(),
+									y=$(popup).find(".YPosition").val(),
+									deg=$(popup).find(".deg").val();
+								$(focusedObj).css({"transform-origin":x+" "+y,
+									"transform":"rotate("+deg+"deg)"});
+							}
+							else
+							{
+								alert("Select object");
+							}
+						});
+					$(popup).find("input[type='button']")
+						.off("click")
+						.on("click",function(e) {
+							if($(e.target).attr("class")!="apply")
+							{
+								$(focusedObj).css({"transform-origin":defX+" "+defY,
+									"transform":"rotate("+defD+"deg)"});
+								editor.updateTextArea();//update iframe
+							}
+							editor.hidePopups();
+							editor.focus();
+							return false;
+						});
+				}
+				
 				//perspect
 				else if (buttonName === "perspect")
 				{
@@ -1392,6 +1468,7 @@
 								}
 							});
 						}
+						editor.updateTextArea();//update iframe
 						editor.$frame.contents().off("click");
 					}
 				}
@@ -1509,7 +1586,7 @@
         // Hide the popup and focus the editor
         hidePopups();
         focus(editor);
-
+		
     }
 	
 	//
@@ -1850,6 +1927,24 @@
 				popupTypeClass = PROMPT_CLASS;
 		}
 		
+		//rotation
+		else if (popupName === "rotation")
+		{
+			$($popup).append('X-position<br><select class="XPosition">' +
+				'<option value="left">Left</option>' +
+				'<option value="center" selected>Center</option>' +
+				'<option value="right">Right</option></select><br>' +
+				'Y-position<br><select class="YPosition">' +
+				'<option value="top">Top</option>' +
+				'<option value="center" selected>Center</option>' +
+				'<option value="bottom">Bottom</option></select><br>' +
+				'rotate(Clockwise)<br><input type="number" class="deg" value="0">[deg]<br>' +
+				'<input type="button" class="apply" value="Apply">&nbsp;&nbsp;' +
+				'<input type="button" class="cancel" value="Cancel">');
+			$($popup).css({"background-color":"#F6F7F9","width":"150px"});
+			popupTypeClass = PROMPT_CLASS;
+		}
+		
 		//perspect
 		else if (popupName === "perspect")
 		{
@@ -2087,7 +2182,8 @@
 	//focused -previous focus object
 	function focused(editor)
 	{
-	}
+        return focusObj;
+    }
 
     // focus - sets focus to either the textarea or iframe
     function focus(editor) {
@@ -2342,7 +2438,8 @@
 						&& command !=="textbox" && command !=="table" 
 						&& command !=="insertrowcol" && command !== "resizecell" 
 						&& command !=="borderstyle" && command !== "background" 
-						&& command !=="bodystyle" && command !== "perspect") { //change
+						&& command !=="bodystyle" && command !== "perspect"
+						&& command !=="rotation" ) { //change
 				if ((!iege11)  || command !== "inserthtml") {
                     try { enabled = queryObj.queryCommandEnabled(command); }
                     catch (err) { enabled = false; }
