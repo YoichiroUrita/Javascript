@@ -14,6 +14,7 @@ plug-in about javascript/jQuery<br>
 Ver.H
 <ul>
 	<li> Enable to rotate. (This function applies focus object.)
+	<li> Bug fix (Problem not to drag table)
 </ul>
 
 Ver.G
