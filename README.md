@@ -11,6 +11,11 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.H
+<ul>
+	<li> Enable to rotate. (This function applies focus object.)
+</ul>
+
 Ver.G
 <ul>
 	<li> Enable to change z-index ( perspective direction of screen )
