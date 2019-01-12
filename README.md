@@ -11,6 +11,12 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.I
+<ul>
+	<li> Enable to rotate and drag with decorated text. (Draft)
+	<li> Bug fix (Problem not to drag)
+</ul>
+
 Ver.H
 <ul>
 	<li> Enable to rotate. (This function applies focus object.)
