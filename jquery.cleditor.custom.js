@@ -18,6 +18,8 @@
  * modify ver.G Y.Urita 2019. 1. 8 Enable to Z-index control , choose to absolute position.
  * modify ver.H Y.Urita 2019. 1. 9 Enable to rotate
  * modify ver.H'Y.Urita 2019. 1.10 Bug fix (Problem not to drag table)
+ * modify ver.I Y.Urita 2019. 1.12 Bug fix (Problem not to drag)
+								   Enable to drag and rotate with decorated text (draft function)
  */
  
 (function ($) {
@@ -369,6 +371,7 @@
 		$main.append(sizing);
 		$(sizing).hide();
 		imageToolbox(editor);
+		pseudoDragEvent(editor);
 
 		//observe focus 
 		editor.$frame.contents()
@@ -558,6 +561,7 @@
                         .on(CLICK, function (e) {
 						// Build the html
 						var frameBody=editor.$frame.contents().find("body"),
+							frameDocument=editor.$frame.contents(),
 							scrTop=$(frameBody).scrollTop(),
 							value = $(e.target).css("background-color"),
 							html = "<textarea style='position:"+editor.options.position+";top:"+scrTop
@@ -570,26 +574,6 @@
 							execCommand(editor,data.command,html,null,data.button);
 						}
 
-						var frameBody=editor.$frame.contents().find("body");
-					
-						//mouse down event
-						$(frameBody).on("dblclick","textarea",function(e)
-						{
-							Mousedown(e,editor,"textarea");
-							
-							$(frameBody).on("mouseleave","textarea",function(e){
-								$(e.target).css("cursor","default");
-								$(frameBody).css("cursor","default");
-							});
-							
-							$(frameBody).on("click","textarea",function(e){
-								if(isDrag==false)
-								{
-									$(e.target).css("cursor","default");
-									$(frameBody).css("cursor","default");
-								}
-							});
-						});
 						hidePopups();
                         focus(editor);
 						return false;
@@ -629,102 +613,6 @@
 							execCommand(editor,data.command,html,null,data.button);
 
 						}
-
-						///to dragable
-						var x,y,ix="",iy="",divX,divY,eX,eY;
-						
-						var isDrag=false;
-						var obj;
-						//mouse down event
-						var frameBody=editor.$frame.contents().find("body"),
-							frameDocument=editor.$frame.contents();
-						$(frameDocument).off("dblclick").on("dblclick","table",tdown);
-
-						//fire when mouse down
-						function tdown(e) {
-							isDrag=true;
-							if(ix=="" || iy=="" )
-							{
-								obj=$(e.target).is("table") ? e.target : $(e.target).closest("table");
-								divX=$(obj).offset().left;
-								divY=$(obj).offset().top;
-								var divW=$(obj).width();
-								var divH=$(obj).height();
-								var html="<div class='divTable' style='position:absolute;top:"+divY+"px;left:"+divX+"px;width:"
-									+divW+"px;height:"+divH+"px;border:2px solid blue;opacity:0.6;background-color:blue'></div>";
-								$(frameBody).append(html);
-								
-								//get relative position
-								ix=$(obj).css("left")!="auto" ? parseInt($(obj).css("left")) : 0;
-								iy=$(obj).css("top")!="auto" ? parseInt($(obj).css("top")) : 0;
-								x = e.pageX;
-								y = e.pageY;
-								
-							}
-							//move event
-							$(frameDocument).on("mousemove",".divTable",tmove);
-							
-						}
-
-						//fire when mouse move
-						function tmove(e) {
-							if(isDrag==true)
-							{
-								//prevent default event
-								e.preventDefault();
-								
-								//to prevent display error dialog in ie11
-								if(window.navigator.userAgent.indexOf("rv:11")!=-1)$(obj).trigger('mouseup');
-								
-								//trace mouse
-								$(e.target).css({"top":e.pageY - y + divY +"px","left":e.pageX - x  + divX + "px"});
-								eX=e.pageX;
-								eY=e.pageY;
-								
-								//mouse up or mouse leave event
-								$(e.target).on("mouseup",tup);
-								$(frameDocument).on("mouseleave",".divTable",tup);
-							}
-						}
-
-						//fire when mouse up
-						function tup(e) {
-							if(isDrag==true)
-							{
-								//remove event handler
-								$(frameDocument).off("mousemove",tmove);
-								$(frameDocument).off("mouseleave",tup);
-								$(e.target).off("mouseup",tup);
-								isDrag=false;
-								$(obj).css({"left":eX-x+ix+"px","top":eY-y+iy+"px"});
-								
-								ix=iy="";
-								setTimeout(function(){
-									$(frameBody).find(".divTable").remove();
-									
-									editor.updateTextArea();//update iframe
-									focusedObj=prevObj=$(obj);
-								},10);
-							}
-						}
-
-						//change icon
-						$(frameDocument).on("dblclick","table",function(e){
-							$(e.target).css("cursor","move");
-						});
-						
-						$(frameDocument).on("mouseleave","table",function(e){
-							$(e.target).css("cursor","default");
-							$(frameDocument).css("cursor","default");
-						});
-						
-						$(frameDocument).on("click","table",function(e){
-							if(isDrag==false)
-							{
-								$(e.target).css("cursor","default");
-								$(frameDocument).css("cursor","default");
-							}
-						});
 						
 						// Reset the text, hide the popup and set focus
 						$text.val("4");
@@ -750,21 +638,22 @@
 							
 							//Click event
 							var frameBody=editor.$frame.contents().find("body");
-							editor.$frame.contents().on("click",function(e)
-							{
-								if($(e.target).closest("table").length==1)
+							//editor.$frame.contents().on("click",function(e)
+							//{
+								//if($(e.target).closest("table").length==1)
+								if($(focusedObj).closest("table").length==1)
 								{
 									var html;
 									//insert columns part
 									if(cols>0)
 									{
-										html="<td style='"+$(e.target).attr("style")+";min-width:2em'></td>";
+										html="<td style='"+$(focusedObj).attr("style")+";min-width:2em'></td>";
 										
 										//Get current column index
-										var c=parseInt($(e.target).closest("tr").children().index(e.target));
+										var c=parseInt($(focusedObj).closest("tr").children().index(e.target));
 										
 										//loop each tr
-										var targetTable=$(e.target).closest("table");
+										var targetTable=$(focusedObj).closest("table");
 										
 										$(targetTable).find("tr").each(function(idx,elem)
 										{
@@ -791,7 +680,7 @@
 									if(rows>0)
 									{
 										//Get current row
-										var thisTr=$(e.target).closest("tr");
+										var thisTr=$(focusedObj).closest("tr");
 										var r=parseInt($(thisTr).closest("table").find("tr").index());
 										
 										//Get column number
@@ -820,11 +709,11 @@
 											}
 										}
 									}
-									
+									editor.updateTextArea();//update iframe
 								}
 								//off event -- cancel when click except table (include td)
 								editor.$frame.contents().off("click");
-							});
+							//});
 							// Reset the text
 							$text.val("0");
 							editor.hidePopups();
@@ -846,27 +735,27 @@
 							
 							//Click event
 							
-							editor.$frame.contents().on("click",function(e)
-							{
-								if($(e.target).is("td"))
+							//editor.$frame.contents().on("click",function(e)
+							//{
+								if($(focusedObj).is("td"))
 								{
 									//change width size
 									if(wid>0)
 									{
-										$(e.target).css("min-width",wid+"px");
+										$(focusedObj).css("min-width",wid+"px");
 										editor.updateTextArea();//update iframe
 									}
 									//change height size
 									if(hei>0)
 									{
-										$(e.target).css("height",hei+"px");
+										$(focusedObj).css("height",hei+"px");
 										editor.updateTextArea();//update iframe
 									}
 									
 								}
 								//off event -- cancel when click except table (include td)
 								editor.$frame.contents().off("click");
-							});
+							//});
 							
 							// Reset the text
 							$text.val("0");	
@@ -886,7 +775,7 @@
 						.off("click")
 						.on("click",function(e){
 
-						var rgbColor=$(e.target).css("background-color")!="transparent" ?
+						var rgbColor=$(focusedObj).css("background-color")!="transparent" ?
 										$(e.target).css("background-color") : "0,0,0,0";
 						borderColor=$(popup).find(".bordersample").css("border-color");
 						var rgb=rgbColor.replace("rgb(","").replace("rgba(","").replace(")","").split(",");
@@ -1041,10 +930,10 @@
 								bdColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()+","
 										+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
 							}
-							editor.$frame.contents().on("click",function(e)
-							{
-								if($(e.target).is("td") || $(e.target).is("hr") 
-								|| $(e.target).is("img") || $(e.target).is("textarea") || $(e.target).is("input"))
+							//editor.$frame.contents().on("click",function(e)
+							//{
+								if($(focusedObj).is("td") || $(e.target).is("hr") 
+								|| $(focusedObj).is("img") || $(e.target).is("textarea") || $(e.target).is("input"))
 								{
 									//color:top,right,bottom,left
 									$(cb).each(function(idx,item)
@@ -1054,14 +943,14 @@
 											//color
 											if($(cbs[0]).prop("checked")==true)
 											{
-												$(e.target).css("border-image","");
-												$(e.target).css("border-"+$(cb[idx]).val()+"-color",bdColor);
-												$(e.target).css("border-"+$(cb[idx]).val()+"-style",$(popup).find(".border.Style").val());
-												$(e.target).css("border-"+$(cb[idx]).val()+"-width",$(popup).find(".border.Width").val());
+												$(focusedObj).css("border-image","");
+												$(focusedObj).css("border-"+$(cb[idx]).val()+"-color",bdColor);
+												$(focusedObj).css("border-"+$(cb[idx]).val()+"-style",$(popup).find(".border.Style").val());
+												$(focusedObj).css("border-"+$(cb[idx]).val()+"-width",$(popup).find(".border.Width").val());
 											}
 											else
 											{
-												$(e.target).css($(cb[idx]).val(),"");
+												$(focusedObj).css($(cb[idx]).val(),"");
 											}
 										}
 									});	
@@ -1071,34 +960,34 @@
 										&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
 										&& $(cbs[1]).prop("checked")==true)
 									{//url
-										$(e.target).css("border-image","");
-										$(e.target).css("border-image-source",
+										$(focusedObj).css("border-image","");
+										$(focusedObj).css("border-image-source",
 											$(popup).find(".sampleimage").css("background-image"));
-										$(e.target).css("border-image-slice",
+										$(focusedObj).css("border-image-slice",
 											$(popup).find(".imageOptions[name='slice']").val());
-										$(e.target).css("border-image-width",
+										$(focusedObj).css("border-image-width",
 											$(popup).find(".imageOptions[name='width']").val());
-										$(e.target).css("border-image-outset",
+										$(focusedObj).css("border-image-outset",
 											$(popup).find(".imageOptions[name='outset']").val());
-										$(e.target).css("border-image-repeat",
+										$(focusedObj).css("border-image-repeat",
 											$(popup).find(".imageOptions[name='repeat']").val());
 									}
 									else if($(cbs[1]).prop("checked")==true)
 									{//gradient
-										$(e.target).css("border-image-source","");
-										$(e.target).css("border-image",
+										$(focusedObj).css("border-image-source","");
+										$(focusedObj).css("border-image",
 											($(popup).find("input[name='repeat']:selected").val()=="repeat" ?
 												"repeating-linear-gradient(" : "linear-gradient(") +
 											$(popup).find(".imageOptions[name='angle']").val() + "deg," +
 											$(popup).find(".imageOptions[name='colors']").val() +")");
 											
-										$(e.target).css("border-image-slice",
+										$(focusedObj).css("border-image-slice",
 											$(popup).find(".imageOptions[name='slice']").val());
-										$(e.target).css("border-image-width",
+										$(focusedObj).css("border-image-width",
 											$(popup).find(".imageOptions[name='width']").val());
-										$(e.target).css("border-image-outset",
+										$(focusedObj).css("border-image-outset",
 											$(popup).find(".imageOptions[name='outset']").val());
-										$(e.target).css("border-image-repeat",
+										$(focusedObj).css("border-image-repeat",
 											$(popup).find("input[name='repeat']:selected").val());
 									}
 
@@ -1106,7 +995,7 @@
 								}
 								//off event -- cancel when click except table (include td,hr,img)
 								editor.$frame.contents().off("click");
-							});
+							//});
 							editor.hidePopups();
 							editor.focus();
 							return false;
@@ -1125,7 +1014,7 @@
 						.on("click", function (e) {
 
 							//Get the background-color from color picker
-							var rgbColor=$(e.target).css("background-color")!="transparent" ?
+							var rgbColor=$(focusedObj).css("background-color")!="transparent" ?
 											$(e.target).css("background-color") : "0,0,0,0";
 							bgColor=$(popup).find(".samplecolor").css("background-color");
 							var rgb=rgbColor.replace("rgb(","").replace("rgba(","").replace(")","").split(",");
@@ -1236,13 +1125,14 @@
 							{
 								drawBackground(editor.$frame.contents().find("body"));
 							}
-							
-							//Apply the image to cell
-							editor.$frame.contents().on("click",function(e)
+							else
 							{
-								drawBackground(e.target);
-							});
-							
+							//Apply the image to cell
+							//editor.$frame.contents().on("click",function(e)
+							//{
+								drawBackground(focusedObj);
+							//});
+							}
 							//common draw procedure
 							function drawBackground(target)
 							{
@@ -1296,13 +1186,13 @@
 				//rotation
 				else if (buttonName === "rotation")
 				{
-					var target="",defX,defY,defD;
+					var target="",defX,defY,defD,defS;
 					//target=focusedObj;// ? focusedObj : prevObj;
 						if($(focusedObj)!="" && $(focusedObj)!=undefined)
 							{
-								console.log($(focusedObj).prop("nodeName"),$(focusedObj).prev().prop("nodeName"));
 								if($(focusedObj).is("td") || $(focusedObj).is("th"))
 									focusedObj=$(focusedObj).closest("table");
+								if($(focusedObj).css("position")=="static") $(focusedObj).css("position",editor.options.position);
 								var tempPos=($(focusedObj).css("transform-origin")).split(" "),
 									tempD=$(focusedObj).css("transform");
 								defX=parseInt(tempPos[0]);
@@ -1314,12 +1204,14 @@
 								if(tempD=="none")
 								{
 									defD=0;
+									defS=1;
 								}
 								else
 								{
 									tempD=tempD.replace("matrix(","");
 									var aryD=tempD.split(",");
 									defD=Math.atan2(parseFloat(aryD[1]),parseFloat(aryD[0]))*180/Math.PI;
+									defS=Math.sqrt(Math.pow(parseFloat(aryD[0]),2)+Math.pow(parseFloat(aryD[1]),2));
 								}
 								$(popup).find(".deg").val(defD);
 							}
@@ -1332,7 +1224,7 @@
 									y=$(popup).find(".YPosition").val(),
 									deg=$(popup).find(".deg").val();
 								$(focusedObj).css({"transform-origin":x+" "+y,
-									"transform":"rotate("+deg+"deg)"});
+									"transform":"rotate("+deg+"deg) scale("+defS+")"});
 							}
 							else
 							{
@@ -1363,10 +1255,10 @@
 							var perspect=$(e.target).attr("class");
 							
 							//Apply
-							editor.$frame.contents().on("click",function(e)
-							{
-								perspective(e.target,perspect);
-							});
+							//editor.$frame.contents().on("click",function(e)
+							//{
+								perspective(focusedObj,perspect);
+							//});
 							
 							editor.hidePopups();
 							editor.focus();
@@ -1591,10 +1483,160 @@
 		
     }
 	
-	//
-	//for draggable resize window
-	//
+	/*
+	 * Observe double click for dragable
+	 */
+	function pseudoDragEvent(editor)
+	{
+		var isDrag=false,isTDrag=false,
+			divX,divY,eX,eY,obj,ix="",iy="",
+			frameBody=editor.$frame.contents().find("body"),
+			frameDocument=editor.$frame.contents();
 
+		//mouse down event
+		$(frameBody).on("dblclick",function(e){
+				//icon
+				$(frameDocument).find(e.target).css("cursor","move");
+
+				//image or text area
+				if($(e.target).is("img") || $(e.target).is("textarea") ) Mousedown(e,e.target);
+					
+				//decorated text
+				if($(e.target).is("span"))
+				{
+					if($(e.target).css("position")=="static") 
+						$(e.target).css("position",editor.options.position);
+					Mousedown(e,e.target);
+				}
+				
+				//table
+				if($(e.target).is("table") || $(e.target).is("td") || $(e.target).is("th")) tdown(e,e.target);
+			});
+			
+		///textarea///
+		//fire when mouse down
+		function Mousedown(e,target) {
+			isDrag=true;
+
+			if(positionX=="" && positionY=="")
+			{
+				//get position
+				positionX=$(target).css("left")!="auto" ? parseFloat($(target).css("left")) : 0;
+				positionY=$(target).css("top")!="auto" ? parseFloat($(target).css("top")) : 0;
+				x = e.pageX - positionX;
+				y = e.pageY - positionY;
+
+			}
+			//move event
+			$(frameDocument).off("mousemove").on("mousemove",target,function(e){Mousemove(e,target)});
+		}
+		
+		//fire when mouse move
+		function Mousemove(e,target) {
+			if(isDrag==true)
+			{
+				//prevent default event
+				e.preventDefault();
+
+				//trace mouse
+				$(target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
+				
+				//mouse up or mouse leave event
+				$(frameDocument).off("mouseup").on("mouseup",target,function(e){Mouseup(e,target)});
+				$(frameDocument).off("mouseleave").on("mouseleave",target,function(e){Mouseup(e,target)});
+			}
+		}
+
+		//fire when mouse up
+		function Mouseup(e,target) {
+			//remove event handler
+			$(frameDocument).off("mousemove",target,Mousemove);
+			$(frameDocument).off("mouseleave",target,Mouseup);
+			$(frameDocument).off("mouseup",target,Mouseup);
+			isDrag=false;
+			positionX=positionY="";
+			
+			//icon
+			$(target).css("cursor","default");
+			$(frameDocument).css("cursor","default");
+			target="";
+		}
+		
+		///table///
+		//fire when mouse down
+		function tdown(e,target) {
+			isTDrag=true;
+
+			if(ix=="" || iy=="" )
+			{
+				obj=$(target).is("table") ? target : $(target).closest("table");
+				divX=$(obj).offset().left;
+				divY=$(obj).offset().top;
+				var divW=$(obj).width(),
+					divH=$(obj).height(),
+					divZ=$(obj).css("z-index");
+				var html="<div class='divTable' style='position:absolute;top:"+divY+"px;left:"+divX+"px;width:"
+					+divW+"px;height:"+divH+"px;border:2px solid blue;opacity:0.6;background-color:blue'></div>";
+				$(frameBody).append(html);
+				if(divZ!="auto") $(frameBody).find(".divTable").css("z-index",divZ+1);
+				
+				//get relative position
+				ix=$(obj).css("left")!="auto" ? parseInt($(obj).css("left")) : 0;
+				iy=$(obj).css("top")!="auto" ? parseInt($(obj).css("top")) : 0;
+				x = e.pageX;
+				y = e.pageY;
+				
+			}
+			//move event
+			$(frameDocument).on("mousemove",".divTable",function(e){tmove(e,$(frameBody).find(".divTable"))});
+			
+		}
+
+		//fire when mouse move
+		function tmove(e,target) {
+			if(isTDrag==true)
+			{
+				//prevent default event
+				e.preventDefault();
+				
+				//to prevent display error dialog in ie11
+				if(iege11) $(obj).trigger('mouseup');
+
+				//trace mouse
+				$(target).css({"top":e.pageY - y + divY +"px","left":e.pageX - x  + divX + "px"});
+				eX=e.pageX;
+				eY=e.pageY;
+				
+				//mouse up or mouse leave event
+				$(target).on("mouseup",function(e){tup(e,target)});
+				$(frameDocument).on("mouseleave",".divTable",function(e){tup(e,target)});
+			}
+		}
+
+		//fire when mouse up
+		function tup(e,target) 
+		{
+			if(isTDrag==true)
+			{
+				//remove event handler
+				$(frameDocument).off("mousemove",tmove);
+				$(frameDocument).off("mouseleave",tup);
+				$(target).off("mouseup",tup);
+				isTDrag=false;
+				$(obj).css({"left":eX-x+ix+"px","top":eY-y+iy+"px"});
+				
+				ix=iy="";
+				setTimeout(function(){
+					$(frameBody).find(".divTable").remove();
+					
+					editor.updateTextArea();//update iframe
+					focusedObj=prevObj=$(obj);
+				},10);
+			}
+		}
+	}	
+	
+	///for draggable resize window///
 	//fire when mouse down
 	function mdown(e,editor) {
 		//get position
@@ -1629,52 +1671,7 @@
 		$(editor.$main).off("mouseup");
 	}
 	
-	//fire when mouse down
-	function Mousedown(e,editor,target) {
-		isDrag=true;
-		var frameDocument=editor.$frame.contents().find("body");
-
-		if(positionX=="" && positionY=="")
-		{
-			//get position
-			positionX=$(e.target).css("left")!="auto" ? parseFloat($(e.target).css("left")) : 0;
-			positionY=$(e.target).css("top")!="auto" ? parseFloat($(e.target).css("top")) : 0;
-			x = e.pageX - positionX;
-			y = e.pageY - positionY;
-		}
-		//move event
-		$(frameDocument).on("mousemove",target,function(ev){Mousemove(ev,editor,target)});
-	}
-	
-	//fire when mouse move
-	function Mousemove(e,editor,target) {
-		if(isDrag==true)
-		{
-			var frameDocument=editor.$frame.contents().find("body");
-			//prevent default event
-			e.preventDefault();
-
-			//trace mouse
-			$(e.target).css({"top":e.pageY - y + "px","left":e.pageX - x + "px"});
-			
-			//mouse up or mouse leave event
-			$(frameDocument).on("mouseup",e.target,function(ev){Mouseup(ev,editor,target)});
-			$(frameDocument).on("mouseleave",target,function(ev){Mouseup(ev,editor,target)});
-		}
-	}
-
-	//fire when mouse up
-	function Mouseup(e,editor,target) {
-		var frameDocument=editor.$frame.contents().find("body");
-		//remove event handler
-		$(frameDocument).off("mousemove",Mousemove);
-		$(frameDocument).off("mouseleave",Mouseup);
-		$(e.target).off("mouseup",Mouseup);
-		isDrag=false;
-		positionX=positionY="";
-	}
-	
-	
+				
     //==================
     // Private Functions
     //==================
@@ -1869,8 +1866,6 @@
 				'Colors(Gradient only)<input type="text" name="colors" class="imageOptions" value="red,green,blue"><br>' +
 				'</div></div>' +
 				
-				//'<label style="display:block">Sample&nbsp;<hr class="bordersample" style="display:inline-block;border-style:solid;border-width:0px;border-top-width:1px;border-color:black;width:50px"></label>' +
-				//'<label style="display:block">Sample&nbsp;<table class="bordersample" '+
 				'Sample<br><table style="border-collapse:border-collapse;"><tr><td class="bordersample" '+
 				'style="border-style:solid;border-width:1px;border-color:black;width:90px;height:10px">' +
 				'</td></tr></table>' +
@@ -1915,7 +1910,6 @@
 				'<option value="repeat-y">Repeat only Y direction</option>' +
 				'<option value="cover">[Cover]Fit with no margin, but image will be cut.(URL only)</option>' +
 				'<option value="contain">[Contain]Fit with any margin, but image is flawless.(URL only)</select>' +
-				//'<div style="border-width:1px;border-image:linear-gradient(0deg,red,blue);border-image-slice:1;border-style:solid;width:146px">' +
 				'Angle(Gradient only)<input type="number" name="angle" min="-360" max="360" step=1 class="imageOptions" ' +
 				'value="0" title="The gradation angle.[Clockwise] 0 deg is bottom to top." style="width:60px">degrees<br>' +
 				'Colors(Gradient only)<input type="text" name="colors" class="imageOptions" value="red,green,blue"><br>' +
@@ -1968,13 +1962,6 @@
         if (!popupTypeClass && !popupContent)
             popupTypeClass = LIST_CLASS;
         $popup.addClass(popupTypeClass);
-
-        // Add the unselectable attribute to all items
-        //if (ie) {
-        //    $popup.attr(UNSELECTABLE, "on")
-        //        .find("div,font,p,h1,h2,h3,h4,h5,h6")
-        //        .attr(UNSELECTABLE, "on");
-       // }
 
         // Add the hover effect to all items
         if ($popup.hasClass(LIST_CLASS) || popupHover === true)
@@ -2647,8 +2634,10 @@
 	{
 		var targetImg,
 			doneAry=[],
-			imgSizing=editor.$main.find(".cleditorSizing");
-		
+			imgSizing=editor.$main.find(".cleditorSizing"),
+			frameDocument=editor.$frame.contents(),
+			frameBody=editor.$frame.contents().find("body");
+			
 		//change icon when mouse enter and leave 
 		$("body").off("mouseenter").on("mouseenter",$(imgSizing),function(e){
 			$(imgSizing).css("cursor","move");
@@ -2660,18 +2649,9 @@
 			$(imgSizing).css("cursor","default");
 			$("body").css("cursor","default");
 		});
-		
-		//change icon on image in dragging
-		editor.$frame.contents().find("body").on("dblclick","img",function(e){
-			editor.$frame.contents().find("img").css("cursor","move");
-		});
-		
-		editor.$frame.contents().find("body").on("mouseleave","img",function(e){
-			editor.$frame.contents().find("img").css("cursor","default");
-		});
-				
+
 		//Event:double click --- pop up resize image window 
-		editor.$frame.contents().find("body").on("click","img",function(e)
+		$(frameBody).on("click","img",function(e)
 		{
 			if(e.originalEvent.ctrlKey==true)//ctrl
 			{
@@ -2682,6 +2662,12 @@
 				$(imgSizing).css({"top":positionY+"px","left":positionY+"px"}).show();
 				doneAry=[];
 				$(imgSizing).find(".butCancel").prop("disabled",true);
+				
+				var mat=$(targetImg).css("transform"),
+					terms= mat=="none" ? [1,0] : $(mat).replace("matrix(","").split(","),
+					scale=Math.sqrt(parseFloat(terms[0])*parseFloat(terms[0])
+						+parseFloat(terms[1])*parseFloat(terms[1]))*100;
+					$(imgSizing).find("input[name='zoom']").val(scale);
 			}
 		});
 
@@ -2702,26 +2688,26 @@
 			
 			if(radioVal=="width")
 			{
-				var w=editor.$frame.contents().find("body").width();
-				$(targetImg).css({"width":w+"px","height":"","zoom":""});
+				var w=$(frameBody).width();
+				$(targetImg).css({"width":w+"px","height":""});//,"zoom":""});
 			}
 			else if(radioVal=="height")
 			{
-				var h=editor.$frame.contents().find("body").height();
-				$(targetImg).css({"width":"","height":h+"px","zoom":""});
+				var h=$(frameBody).height();
+				$(targetImg).css({"width":"","height":h+"px"});//,"zoom":""});
 			}
 			else if(radioVal=="zoom")
 			{
 				var rate=parseFloat(editor.$main.find("input[name=zoom]").val())/100;
 				
-				$(targetImg).css({"width":"","height":"","-ms-zoom":rate,"zoom":rate});
+				$(targetImg).css({"width":"","height":"","transform":"scale("+rate+")"});
 			}
 			else if(radioVal=="reset")
 			{
 				$(targetImg).css({"left":"0px","top":"0px"});
 			}
 			$(imgSizing).find(".butCancel").prop("disabled",false);
-
+			editor.updateTextArea();//update iframe
 		});
 		
 		//click cancel button
@@ -2745,9 +2731,9 @@
 		editor.$main.on("click",".butClose",function(){$(imgSizing).hide()});
 		
 		//Event:paste
-		editor.$frame.contents().find("body").on('paste',function(e)
+		$(frameBody).on('paste',function(e)
 		{
-			if(window.navigator.userAgent.indexOf("rv:11")==-1)
+			if(!iege11)
 			{//chrome
 				//prevent default procedure when except text/plain case
 				if(e.originalEvent.clipboardData.items[0].type!="text/plain") 
@@ -2765,8 +2751,8 @@
 								base64=item.src;
 							}
 						});
-					var scrTop=editor.$frame.contents().find("body").scrollTop(),
-					html='<img style="top:'+scrTop+':left:0px;position:'+editor.options.position+';zoom:1.0;" src="'+base64+'">&#10;';
+					var scrTop=$(frameBody).scrollTop(),
+					html='<img style="top:'+scrTop+':left:0px;position:'+editor.options.position+'" src="'+base64+'">&#10;';
 					editor.doc.execCommand("inserthtml", true, html);
 					return;
 				}
@@ -2774,20 +2760,21 @@
 				// Handle the event
 				retrieveImageFromClipboardAsBlob(e, function(imageBlob){
 					// If there's an image, display it in the canvas
-					if(imageBlob){
-						var img = new Image();
-						
+					if(imageBlob)
+					{
 						//encoding by base64 via CANVAS
-						var Canvas=$("<canvas></canvas>");
-						var context=Canvas[0].getContext('2d');
-						img.onload = function(){
+						var img = new Image(),
+							Canvas=$("<canvas></canvas>"),
+							context=Canvas[0].getContext('2d');
+						img.onload = function()
+						{
 							
 							context.canvas.width=img.width;
 							context.canvas.height=img.height;
 							context.drawImage(img,0,0);
 							
-							var scrTop=editor.$frame.contents().find("body").scrollTop(),
-								html='<img style="left:0px;top:'+scrTop+'px;zoom:1.0;position:'+editor.options.position+'" src="'
+							var scrTop=$(frameBody).scrollTop(),
+								html='<img style="left:0px;top:'+scrTop+'px;position:'+editor.options.position+'" src="'
 									+Canvas[0].toDataURL('image/png')+'">&#10;';
 								
 								editor.doc.execCommand("inserthtml", true, html);
@@ -2805,12 +2792,12 @@
 				var seek=function(){
 					setTimeout(function(){
 						var boolExist=false;
-						editor.$frame.contents().find("img").each(function(idx,elem)
+						$(frameDocument).find("img").each(function(idx,elem)
 						{
 							//apply style to img
 							if($(elem).css("position")!="absolute")
 							{
-								var scrTop=editor.$frame.contents().find("body").scrollTop();
+								var scrTop=$(frameDocument).find("body").scrollTop();
 								$(elem).css({'position':editor.options.position,'top':scrTop+'px','zoom':1});
 								boolExist=true;
 							}
@@ -2826,29 +2813,10 @@
 		//Drag and Drop
 		if(window.navigator.userAgent.indexOf("rv:11")==-1)
 		{//chrome
-			
-			var frameDocument=editor.$frame.contents();
-			var frameBody=editor.$frame.contents().find("body");
-			//Event:drag start ---- pass to dataTransfer
-			$(frameBody).on("dragstart","img",function(e)
-			{
-				if(e.originalEvent.dataTransfer.files.length!=0)
-				{//drag image file
-					draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use jQuery
-				}
-				else
-				{//move image(Not file)
-					//imgmdown(e);
-				}
-			});
-			
+			//Event:drag over 
 			$(frameBody).on("dragover","img",function(e)
 			{
 				e.preventDefault();
-				if(e.originalEvent.dataTransfer.files.length==0)
-				{//move image
-					//imgmmove(e);
-				}
 			});
 			
 			//Event:drop
@@ -2869,75 +2837,18 @@
 						// when error occured
 						if(file_reader.error) return;
 						
-						var scrTop=editor.$frame.contents().find("body").scrollTop(),
+						var scrTop=$(frameBody).scrollTop(),
 
-						html='<img style="'+scrTop+'px;left:0px;position:'+editor.options.position+';zoom:1.0" src="'+file_reader.result+'">&#10';
+						html='<img style="'+scrTop+'px;left:0px;position:'+
+							editor.options.position+';zoom:1.0" src="'+file_reader.result+'">&#10';
 						editor.doc.execCommand("inserthtml", true,html);//, data.button);
 						
 						editor.updateTextArea();//update iframe
 					}
 					file_reader.readAsDataURL(file);
 				}
-				else
-				{
-					imgmup(e);
-				}
 			});
 			
-			//Event:drop and drag end 
-			$(frameDocument).on("dragend",function(e)
-			{
-				//update source
-				editor.updateTextArea();
-			});
-			
-			///to dragable///
-			
-			var imgx,imgy,orimX,orimY;
-			
-			//mouse down event
-			$(frameDocument).on("dblclick","img",imgmdown);
-						
-			//fire when mouse down on image
-			function imgmdown(e) {
-				isDrag=true;//drag flag on
-				
-				//get global position
-				imgx=$(e.target).css("left")!="auto" ? parseInt($(e.target).css("left")) : 0;
-				imgy=$(e.target).css("top")!="auto" ? parseInt($(e.target).css("top")) : 0;
-				orimX=e.pageX;
-				orimY=e.pageY;
-				
-				//move event
-				$(frameDocument).off("mousemove").on("mousemove","img",imgmmove);
-			}
-
-			//fire when mouse move
-			function imgmmove(e) {
-				if(isDrag==true)//prevent move when double click event fire
-				{
-					//prevent default event
-					e.preventDefault();
-					
-					//trace mouse
-					var zoom=$(e.target).css("zoom");
-					var Ximg=(e.pageX-orimX)/parseFloat(zoom)+imgx;
-					var Yimg=(e.pageY-orimY)/parseFloat(zoom)+imgy;
-					$(e.target).css({"top":Yimg + "px","left":Ximg + "px"});
-					
-					//mouse up or mouse leave event
-					$(frameDocument).off("mouseup").on("mouseup",e.target,imgmup);
-					$(frameDocument).off("mouseleave").on("mouseleave","img",imgmup);
-				}
-			}
-
-			//fire when mouse up
-			function imgmup(e) {
-				//remove event handler
-				$(frameDocument).off("mousemove");
-				$(frameDocument).off("mouseleave");
-				$(frameDocument).off("mouseup");
-			}
 
 		}
 		else
@@ -2950,10 +2861,6 @@
 			//4. hide catcher's layer again as NINJA.
 			$(document).ready(function(e)
 			{
-				//waiting until DOM is ready
-				var frameDocument=editor.$frame.contents(),
-					frameBody=editor.$frame.contents().find("body");
-				
 				//make catcher layer (div element)
 				var ww=editor.$main.width(),
 					hh=editor.$main.height(),
@@ -2972,10 +2879,6 @@
 					if(e.originalEvent.dataTransfer.files.length!=0)
 					{
 						draggingFile=e.originalEvent.dataTransfer;//need 'originalEvent' when use JQuery
-					}
-					else
-					{
-						imgmdown(e);
 					}
 				});
 				
@@ -3024,62 +2927,10 @@
 				{
 					$(".cleditorCatcher").show();
 				});
-				
-				///to dragable///
-				var imgx="",imgy="",orimX,orimY;
-				
-				//mouse down event
-				$(frameDocument).on("dblclick","img",imgmdown);
-							
-				//fire when mouse down on image
-				function imgmdown(e) {
-					
-					isDrag=true;//drag flag on
-					if(imgx=="" && imgy=="")
-					{
-						imgx=$(e.target).css("left")!="auto" ? parseInt($(e.target).css("left")) : 0;
-						imgy=$(e.target).css("top")!="auto" ? parseInt($(e.target).css("top")) : 0;
-						orimX=e.pageX;
-						orimY=e.pageY;
-					}
-					
-					//move event
-					$(frameDocument).on("mousemove","img",imgmmove);
-					
-				}
-
-				//fire when mouse move
-				function imgmmove(e) {
-					if(isDrag==true)//prevent move when double click event fire
-					{
-						//prevent default event
-						e.preventDefault();
-						
-						//trace mouse
-						var Ximg=e.pageX-orimX+imgx;
-						var Yimg=e.pageY-orimY+imgy;
-						$(e.target).css("left",Ximg+"px");
-						$(e.target).css("top",Yimg+"px");
-						
-						//mouse up or mouse leave event
-						$(e.target).on("mouseup",imgmup);
-						$(frameDocument).on("mouseleave","img",imgmup);
-					}
-				}
-
-				//fire when mouse up
-				function imgmup(e) {
-					//remove event handler
-					$(frameDocument).off("mousemove",imgmmove);
-					$(frameDocument).off("mouseleave",imgmup);
-					$(e.target).off("mouseup",imgmup);
-					isDrag=false;
-					imgx=imgy="";
-				}
-
 			});
 		}
 	}
+	
 	//common function when drag and drop image file for background or border.
 	function dndImage(targetName,targetSample,popup)
 	{
