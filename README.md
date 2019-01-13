@@ -11,46 +11,53 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.J
+<ul>
+	<li> Enable to rotate and drag with decorated text. (Shift + double click for drag mode)</li>
+	<li> Change selective way of element from 'past setting' to 'previous setting'.<br>
+		(Current focused element is surrounded by blue borders.)</li>
+</ul>
+
 Ver.I
 <ul>
-	<li> Enable to rotate and drag with decorated text. (Draft)
-	<li> Bug fix (Problem not to drag)
+	<li> Enable to rotate and drag with decorated text. (Draft)</li>
+	<li> Bug fix. (Problem not to drag)</li>
 </ul>
 
 Ver.H
 <ul>
-	<li> Enable to rotate. (This function applies focus object.)
-	<li> Bug fix (Problem not to drag table)
+	<li> Enable to rotate. (This function applies focus object.)</li>
+	<li> Bug fix. (Problem not to drag table)</li>
 </ul>
 
 Ver.G
 <ul>
-	<li> Enable to change z-index ( perspective direction of screen )
-	<li> Enable to choose absolute position
+	<li> Enable to change z-index. ( perspective direction of screen )</li>
+	<li> Enable to choose absolute position.</li>
 </ul>
 
 Ver.F
 <ul>
-	<li> Bug fix (Problem not to drag)
-	<li> Enable to toggle image detail setting on border/background. (To simple view)
+	<li> Bug fix (Problem not to drag)</li>
+	<li> Enable to toggle image detail setting on border/background. (To simple view)</li>
 </ul>
 
 Ver.E
 <ul>
-	<li> Enable to apply image to border/background with textbox, HR(border only) & body.
-	<li> Enable to apply gradational color to border/background with textbox,HR(border only) ,image(border only) & body.
-	<li> Enable to apply solid color to background with body.
-	<li> Note:HR is hard to click. Please try few times.
+	<li> Enable to apply image to border/background with textbox, HR(border only) & body.</li>
+	<li> Enable to apply gradational color to border/background with textbox,HR(border only) ,image(border only) & body.</li>
+	<li> Enable to apply solid color to background with body.</li>
+	<li> Note:HR is hard to click. Please try few times.</li>
 </ul>
 
 Ver.D
 <ul>
 	<li> Integration with <a href="#cleditor_tablecustom">jquery.cleditor.table.custom.js</a>.</li>
-	<li> Unification of changing  drag-mode by double click. (<a href="#operation">See this</a>)
-	<li> Enable to apply image to background with textbox.
-	<li> Enable to apply color to background with textbox and image.
-	<li> Enable to apply color to border with textbox and image.
-	<li> Note: Application border image is still disabled.
+	<li> Unification of changing  drag-mode by double click. (<a href="#operation">See this</a>)</li>
+	<li> Enable to apply image to background with textbox.</li>
+	<li> Enable to apply color to background with textbox and image.</li>
+	<li> Enable to apply color to border with textbox and image.</li>
+	<li> Note: Application border image is still disabled.</li>
 </ul>
 Ver.C
 <ul>
@@ -92,7 +99,8 @@ $( id of same textarea as cleditor).cleditor({"position":"absolute"});  //Now yo
   
   To draggable mode 
   - Double click turns draggable mode on object.
-  - Valid objects are image, textbox and table.
+   (Shift + double click for decorated text.)
+  - Valid objects are image, textbox, table and decorated text.
   
   (This change is for simplify and prevents unexpected action)
   
@@ -124,7 +132,7 @@ I have only few ideas in this time.
 <ul>
 	<li> <s>Integration with below files.</s> </li>
 	<li> <s>Selectable border style with ruler</s> <s>(HR tag)</s>. </li>
-	<li> Selective way of element from 'past setting' to 'previous setting' in images and tables. </li>
+	<li> <s>Selective way of element from 'past setting' to 'previous setting' in images and tables. </s></li>
 </ul>
 
 
