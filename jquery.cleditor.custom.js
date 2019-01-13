@@ -19,7 +19,9 @@
  * modify ver.H Y.Urita 2019. 1. 9 Enable to rotate
  * modify ver.H'Y.Urita 2019. 1.10 Bug fix (Problem not to drag table)
  * modify ver.I Y.Urita 2019. 1.12 Bug fix (Problem not to drag)
-								   Enable to drag and rotate with decorated text (draft function)
+ *								   Enable to drag and rotate with decorated text (draft function)
+ * modify ver.J Y.Urita 2019. 1.13 Enable to drag and rotate with decorated text.
+								   Change selective way of element from 'past setting' to 'previous setting'.
  */
  
 (function ($) {
@@ -203,7 +205,8 @@
 		y,
 		isDrag=false,
 		draggingFile,
-		focusedObj,prevObj,
+		focusedObj,
+		objStyle=[{"top":"","bottom":"","left":"","top":""}],
 		zidx=0, //value of z-index
 		sizing=$("<div class='cleditorSizing' style='background-color:#ececec;position:absolute;padding:2px'>"+
 				"<b style='text-align:center;display:block'>Image resizing</b>"+
@@ -375,13 +378,45 @@
 
 		//observe focus 
 		editor.$frame.contents()
-			.off("click")
-			.on("click",$("body").children(),function(e)
+			.off(CLICK)
+			.on(CLICK,$("body").children(),function(e)
 			{
+				if($(focusedObj)!="" && $(focusedObj)!=undefined)
+				{
+					$(focusedObj).css("border-top",objStyle.top);
+					$(focusedObj).css("border-bottom",objStyle.bottom);
+					$(focusedObj).css("border-left",objStyle.left);
+					$(focusedObj).css("border-right",objStyle.right);
+				}
+				if($(e.target).is("body") || $(e.taget).is("html") || 
+					e.target.nodeName==="HTML" || $(e.target).is(document))
+						focusedObj=editor.$frame.contents().find("body");
+				else
+					focusedObj=e.target;
+				refreshButtons(editor);
+
+				//stack the border style of target object
+				objStyle.top=$(focusedObj).css("border-top");
+				objStyle.bottom=$(focusedObj).css("border-bottom");
+				objStyle.left=$(focusedObj).css("border-left");
+				objStyle.right=$(focusedObj).css("border-right");
 				
-				if($(e.target).is("body") || $(e.taget).is("html") || $(e.target).is(document))return false;
-				prevObj=focusedObj;
-				focusedObj=e.target;
+				$(focusedObj).css("border","2px solid rgba(0,0,255,0.5)");
+			});
+			
+		editor.$frame.contents()
+			.off("keydown")
+			.on("keydown",$("body"),function(e)			
+			{
+				//if escape key stroked
+				if(e.keyCode === 27)
+				{
+					$(focusedObj).css("border-top",objStyle.top);
+					$(focusedObj).css("border-bottom",objStyle.bottom);
+					$(focusedObj).css("border-left",objStyle.left);
+					$(focusedObj).css("border-right",objStyle.right);
+					focusedObj=undefined;
+				}
 			});
     };
 
@@ -498,7 +533,9 @@
 
             // Handle popups
             if (popupName) {
-                var $popup = $(popup);
+                var $popup = $(popup),
+					frameDocument=editor.$frame.contents(),
+					frameBody=editor.$frame.contents().find("body");
 
                 // URL
                 if (popupName === "url") {
@@ -560,9 +597,7 @@
                         .off(CLICK)
                         .on(CLICK, function (e) {
 						// Build the html
-						var frameBody=editor.$frame.contents().find("body"),
-							frameDocument=editor.$frame.contents(),
-							scrTop=$(frameBody).scrollTop(),
+						var scrTop=$(frameBody).scrollTop(),
 							value = $(e.target).css("background-color"),
 							html = "<textarea style='position:"+editor.options.position+";top:"+scrTop
 									+"px;left:0px;width:100px;height:20px;background-color:"
@@ -583,13 +618,12 @@
 				//insert table
 				else if(buttonName === "table")
 				{	
-					
-					$(popup).children(":button")
-						.off("click")
-						.on("click",function(e) {
+					$popup.children(":button")
+						.off(CLICK)
+						.on(CLICK,function(e) {
 
 						// Get the column and row count
-						var $text = $(popup).find(":text"),
+						var $text = $popup.find(":text"),
 							cols = parseInt($text[0].value),
 							rows = parseInt($text[1].value);
 
@@ -625,95 +659,94 @@
 				//insert rows and columns in table
 				else if (buttonName === "insertrowcol")
 				{
-					$(popup).children(":button")
-						.off("click")
-						.on("click",function(e) {
+					$popup.children(":button")
+						.off(CLICK)
+						.on(CLICK,function(e) {
 							// Get insert position
-							var radi=$(popup).find("input[name='insertFR']:checked");
+							var $radi=$popup.find("input[name='insertFR']:checked");
 							
 							// Get the column and row count
-							var $text = $(popup).find(":text"),
+							var $text = $popup.find(":text"),
 								cols = parseInt($text[0].value),
 								rows = parseInt($text[1].value);
 							
 							//Click event
-							var frameBody=editor.$frame.contents().find("body");
-							//editor.$frame.contents().on("click",function(e)
-							//{
-								//if($(e.target).closest("table").length==1)
-								if($(focusedObj).closest("table").length==1)
+							if($(focusedObj).closest("table").length==1)
+							{
+								var html;
+								//insert columns part
+								if(cols>0)
 								{
-									var html;
-									//insert columns part
-									if(cols>0)
-									{
-										html="<td style='"+$(focusedObj).attr("style")+";min-width:2em'></td>";
-										
-										//Get current column index
-										var c=parseInt($(focusedObj).closest("tr").children().index(e.target));
-										
-										//loop each tr
-										var targetTable=$(focusedObj).closest("table");
-										
-										$(targetTable).find("tr").each(function(idx,elem)
-										{
-											if($(radi).val()==="front")
-											{//front
-												//insert columns
-												for(var i=0;i<cols;i++)
-												{									
-													$(elem).find("td:nth-child("+(1+c)+")").before(html);
-												}
-											}
-											else
-											{//rear
-												//insert columns
-												for(var i=0;i<cols;i++)
-												{
-													$(elem).find("td:nth-child("+(1+c)+")").after(html);
-												}
-											}	
-										});
-									}
+									html=$("<td style='"+$(focusedObj).attr("style")+";min-width:2em'></td>")
+										.css({"border-top":objStyle.top,"border-bottom":objStyle.bottom,
+												"border-left":objStyle.left,"border-right":objStyle.right});
+									//Get current column index
+									var c=parseInt($(focusedObj).closest("tr").children().index($(focusedObj)));
 									
-									//insert rows part
-									if(rows>0)
+									//loop each tr
+									var targetTable=$(focusedObj).closest("table");
+									
+									$(targetTable).find("tr").each(function(idx,elem)
 									{
-										//Get current row
-										var thisTr=$(focusedObj).closest("tr");
-										var r=parseInt($(thisTr).closest("table").find("tr").index());
-										
-										//Get column number
-										var cs=$(thisTr).find("td").length;
-										html="&#09;<tr style='"+$(thisTr).attr("style")+"'>";
-										$(thisTr).find("td").each(function(idx,elem)
-										{
-											html+="<td style='"+$(elem).attr("style")+";min-height:1em'></td>";
-										});
-										html+="</tr>&#10;";
-										
-										if($(radi).val()==="front")
+										if($radi.val()==="front")
 										{//front
 											//insert columns
-											for(var i=0;i<rows;i++)
-											{
-												$(thisTr).before(html);
+											for(var i=0;i<cols;i++)
+											{									
+												$(elem).find("td:nth-child("+(1+c)+")").before(html[0].outerHTML);
 											}
 										}
 										else
 										{//rear
 											//insert columns
-											for(var i=0;i<rows;i++)
+											for(var i=0;i<cols;i++)
 											{
-												$(thisTr).after(html);
+												$(elem).find("td:nth-child("+(1+c)+")").after(html[0].outeHTML);
 											}
+										}	
+									});
+								}
+								
+								//insert rows part
+								if(rows>0)
+								{
+									//Get current row
+									var thisTr=$(focusedObj).closest("tr");
+									var r=parseInt($(thisTr).closest("table").find("tr").index());
+									
+									//Get column number
+									var cs=$(thisTr).find("td").length;
+									html="&#09;<tr style='"+$(thisTr).attr("style")+"'>";
+									$(thisTr).find("td").each(function(idx,elem)
+									{
+										html+=$("<td style='"+$(elem).attr("style")+";min-height:1em'></td>")
+											.css({"border-top":objStyle.top,"border-bottom":objStyle.bottom,
+												"border-left":objStyle.left,"border-right":objStyle.right})[0].outerHTML;
+									});
+									html+="</tr>&#10;";
+									
+									if($radi.val()==="front")
+									{//front
+										//insert columns
+										for(var i=0;i<rows;i++)
+										{
+											$(thisTr).before(html);
 										}
 									}
-									editor.updateTextArea();//update iframe
+									else
+									{//rear
+										//insert columns
+										for(var i=0;i<rows;i++)
+										{
+											$(thisTr).after(html);
+										}
+									}
 								}
-								//off event -- cancel when click except table (include td)
-								editor.$frame.contents().off("click");
-							//});
+								editor.updateTextArea();//update iframe
+							}
+							//off event -- cancel when click except table (include td)
+							editor.$frame.contents().off(CLICK);
+							
 							// Reset the text
 							$text.val("0");
 							editor.hidePopups();
@@ -725,101 +758,97 @@
 				//resize cell
 				else if (buttonName === "resizecell")
 				{
-					$(popup).children(":button")
-						.off("click")
-						.on("click",function(e) {
+					$popup.children(":button")
+						.off(CLICK)
+						.on(CLICK,function(e) {
 							// Get the column and row count
-							var $text = $(popup).find(":text"),
+							var $text = $popup.find(":text"),
 								wid = parseInt($text[0].value),
 								hei = parseInt($text[1].value);
 							
-							//Click event
-							
-							//editor.$frame.contents().on("click",function(e)
-							//{
-								if($(focusedObj).is("td"))
+							if($(focusedObj).is("td"))
+							{
+								//change width size
+								if(wid>0)
 								{
-									//change width size
-									if(wid>0)
-									{
-										$(focusedObj).css("min-width",wid+"px");
-										editor.updateTextArea();//update iframe
-									}
-									//change height size
-									if(hei>0)
-									{
-										$(focusedObj).css("height",hei+"px");
-										editor.updateTextArea();//update iframe
-									}
-									
+									$(focusedObj).css("min-width",wid+"px");
+									editor.updateTextArea();//update iframe
 								}
-								//off event -- cancel when click except table (include td)
-								editor.$frame.contents().off("click");
-							//});
+								//change height size
+								if(hei>0)
+								{
+									$(focusedObj).css("height",hei+"px");
+									editor.updateTextArea();//update iframe
+								}
+								
+							}
+							//off event -- cancel when click except table (include td)
+							editor.$frame.contents().off("click");
 							
 							// Reset the text
 							$text.val("0");	
 							editor.hidePopups();
 							editor.focus();
 							return false;
-						});
+					});
 				}
 
 				//border style
 				else if (buttonName === "borderstyle")
 				{
 					var borderColor,bdColor,bdImage,
-						cbs = $(popup).find(".appobj");
+						currentStyle=$(focusedObj).attr("style"),
+						cbs = $popup.find(".appobj");
 						
-					$(popup).find(".colorpicker")
-						.off("click")
-						.on("click",function(e){
+					$popup.find(".colorpicker")
+						.off(CLICK)
+						.on(CLICK,function(e){
 
-						var rgbColor=$(focusedObj).css("background-color")!="transparent" ?
+						var rgbColor=$(e.target).css("background-color")!="transparent" ?
 										$(e.target).css("background-color") : "0,0,0,0";
-						borderColor=$(popup).find(".bordersample").css("border-color");
+						borderColor=$popup.find(".bordersample").css("border-color");
 						var rgb=rgbColor.replace("rgb(","").replace("rgba(","").replace(")","").split(",");
 						
-						$(popup).find(".rgbaColor.r").val(parseInt(rgb[0]));
-						$(popup).find(".rgbaColor.g").val(parseInt(rgb[1]));
-						$(popup).find(".rgbaColor.b").val(parseInt(rgb[2]));
-						$(popup).find(".rgbaColor.a").val(rgb.length!=3 ? 0 : 1 );
+						$popup.find(".rgbaColor.r").val(parseInt(rgb[0]));
+						$popup.find(".rgbaColor.g").val(parseInt(rgb[1]));
+						$popup.find(".rgbaColor.b").val(parseInt(rgb[2]));
+						$popup.find(".rgbaColor.a").val(rgb.length!=3 ? 0 : 1 );
 						bdColor="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+ (rgb.length!=3 ? 0 : 1)+")";
+	
+						$popup.find(".samplecolor").css("background-color",bdColor);				
 						
-						$(popup).find(".samplecolor").css("background-color",bdColor);				
-
 						// Get the which positions are change
 						var cb = $(popup).find("input[type=checkbox]");
 						
 						//switch background color visibility by checkbox
 						if($(cb[0]).prop("checked")==true)
 						{
-							$(popup).find(".bordersample").css("border-color",bdColor);
+							$(focusedObj).css("border-color",bdColor);
 						}
 						else
 						{
-							$(popup).find(".bordersample").css("border-color","");
+							$(focusedObj).css("border-color","");
 						}
 						
 					});
 
 					//drag and drop
-					dndImage(".sampleimage",".bordersample",popup);//sampleimage
+					dndImage(".sampleimage",focusedObj,popup,buttonName);//sampleimage
 					
 					//on change RGBA number
-					$(popup).find(".rgbaColor")
+					$popup.find(".rgbaColor")
 						.on("change input paste", function (e) {
-							bdColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()
-									+","+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
+							bdColor="rgba("+$popup.find(".rgbaColor.r").val()+","+$popup.find(".rgbaColor.g").val()
+									+","+$popup.find(".rgbaColor.b").val()+","+$popup.find(".rgbaColor.a").val()+")";
 						
-							$(popup).find(".samplecolor").css("background-color",bdColor);
+							$popup.find(".samplecolor").css("background-color",bdColor);
 							
 							if($(cbs[0]).prop("checked")==true)
-								$(popup).find(".bordersample").css("border-color",bdColor);
+								$(focusedObj).css("border-color",bdColor);
 						});
 						
 					//on change Select tag
-					$(popup).find(".border")
+					$popup.find(".border")
 						.on("change",function(e){
 							// Get the which positions are ON
 							var cb = $(popup).find("input[type=checkbox]");
@@ -829,22 +858,22 @@
 							{
 								if($(cbs[0]).prop("checked")==true)
 								{
-									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-style",$(popup).find(".border.Style").val());
-									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-width",$(popup).find(".border.Width").val());
+									$(focusedObj).css("border-"+$(cb[i]).val()+"-style",$(popup).find(".border.Style").val());
+									$(focusedObj).css("border-"+$(cb[i]).val()+"-width",$(popup).find(".border.Width").val());
 								}
 								else
 								{
-									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-style","");
-									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-width","");
+									$(focusedObj).css("border-"+$(cb[i]).val()+"-style","");
+									$(focusedObj).css("border-"+$(cb[i]).val()+"-width","");
 								}
 							}
 						});
 						
 					//on change Check Box 
-					$(popup)
+					$popup
 						.on("change","input[type=checkbox]", function (e) {
 							// Get the which positions are change
-							var cb=$(popup).find("input[type=checkbox]");
+							var cb=$popup.find("input[type=checkbox]");
 							
 							//switch background color or image visibility by checkbox
 							
@@ -852,153 +881,103 @@
 								//color
 								if($(cbs[0]).prop("checked")==true)
 								{
-									$(popup).find(".bordersample").css("border-image","");
-									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-color",bdColor);
+									$(focusedObj).css("border-image","");
+									$(focusedObj).css("border-"+$(cb[i]).val()+"-color",bdColor);
 								}
 								else
 								{
-									$(popup).find(".bordersample").css("border-"+$(cb[i]).val()+"-color","");
+									$(focusedObj).css("border-"+$(cb[i]).val()+"-color","");
 								}
 								
 								//image
 								if($(cbs[1]).prop("checked")==true)
 								{
-									$(popup).find(".bordersample").css("border-image-source","url('"+imageObj+"')");
+									$(focusedObj).css("border-image-source","url('"+imageObj+"')");
 								}
 								else
 								{
-									$(popup).find(".bordersample").css("border-image-source","");
+									$(focusedObj).css("border-image-source","");
 								}
 							}
 						});
 					
 					//on change check Box of image type 
-					$(popup)
-						.on("change input","input[type=radio],.imageOptions", function (e) {
+					$popup
+						.on("change input","input[type=radio],.imageOptions,.appobj", function (e) {
 							if($(cbs[1]).prop("checked")==true)
 							{
 								//check selection with URL or Gradient
-								if($(popup).find("input[type=radio]:checked").val()=="url" 
-									&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
+								if($popup.find("input[type=radio]:checked").val()=="url" 
+									&& $popup.find(".sampleimage").css("background-image").indexOf("url(")!=-1
 									&& $(cbs[1]).prop("checked")==true)
 								{//URL
-									$(popup).find(".bordersample").css("border-image","");
-									$(popup).find(".bordersample").css("border-image-source",
-										$(popup).find(".sampleimage").css("background-image"));
-									$(popup).find(".bordersample").css("border-image-slice",
-										$(popup).find(".imageOptions[name='slice']").val());
-									$(popup).find(".bordersample").css("border-image-width",
-										$(popup).find(".imageOptions[name='width']").val());
-									$(popup).find(".bordersample").css("border-image-outset",
-										$(popup).find(".imageOptions[name='outset']").val());
-									$(popup).find(".bordersample").css("border-image-repeat",
-										$(popup).find(".imageOptions[name='repeat']").val());
+									$(focusedObj).css("border-image","");
+									$(focusedObj).css("border-image-source",
+										$popup.find(".sampleimage").css("background-image"));
+									$(focusedObj).css("border-image-slice",
+										$popup.find(".imageOptions[name='slice']").val());
+									$(focusedObj).css("border-image-width",
+										$popup.find(".imageOptions[name='width']").val());
+									$(focusedObj).css("border-image-outset",
+										$popup.find(".imageOptions[name='outset']").val());
+									$(focusedObj).css("border-image-repeat",
+										$popup.find(".imageOptions[name='repeat']").val());
 								}
 								else if($(cbs[1]).prop("checked")==true)
 								{//Gradient
-									$(popup).find(".bordersample").css("border-image-source","");
-									$(popup).find(".bordersample").css("border-image",
-										($(popup).find(".imageOptions[name='repeat']").val()=="repeat" ?
+									$(focusedObj).css("border-image-source","");
+									$(focusedObj).css("border-image",
+										($popup.find(".imageOptions[name='repeat']").val()=="repeat" ?
 											"repeating-linear-gradient(" : "linear-gradient(") +
-										$(popup).find(".imageOptions[name='angle']").val() + "deg," +
-										$(popup).find(".imageOptions[name='colors']").val() +")");
+										$popup.find(".imageOptions[name='angle']").val() + "deg," +
+										$popup.find(".imageOptions[name='colors']").val() +")");
 										
-									$(popup).find(".bordersample").css("border-image-slice",
-										$(popup).find(".imageOptions[name='slice']").val());
-									$(popup).find(".bordersample").css("border-image-width",
-										$(popup).find(".imageOptions[name='width']").val());
-									$(popup).find(".bordersample").css("border-image-outset",
-										$(popup).find(".imageOptions[name='outset']").val());
-									$(popup).find(".bordersample").css("border-image-repeat",
-										$(popup).find(".imageOptions[name='repeat']").val());
+									$(focusedObj).css("border-image-slice",
+										$popup.find(".imageOptions[name='slice']").val());
+									$(focusedObj).css("border-image-width",
+										$popup.find(".imageOptions[name='width']").val());
+									$(focusedObj).css("border-image-outset",
+										$popup.find(".imageOptions[name='outset']").val());
+									$(focusedObj).css("border-image-repeat",
+										$popup.find(".imageOptions[name='repeat']").val());
 								}
 							}
 						});
 							
-					// Wire up the submit button click event handler
-					$(popup).children(":button")
-						.off("click")
-						.on("click", function (e) {
+					// Wire up the apply button click event handler
+					$popup.children(":button")
+						.off(CLICK)
+						.on(CLICK, function (e) {
+							if($(e.target).prop("class")=="apply")
+							{//apply						
+								editor.updateTextArea();//update iframe
+								
+								//stack current style
+								currentStyle=$(focusedObj).attr("style")
+								//stack the border style of target object
+								objStyle.top=$(focusedObj).css("border-top");
+								objStyle.bottom=$(focusedObj).css("border-bottom");
+								objStyle.left=$(focusedObj).css("border-left");
+								objStyle.right=$(focusedObj).css("border-right");
 
-							// Get the which positions are change
-							var cb = $(popup).find("input[type=checkbox]"),
-								sl = $(popup).find("select");
-							bdColor=$(popup).find(".bordersample").css("border-color");
-							
-							if(iege11 && bdColor=="")
-							{
-								bdColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()+","
-										+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
+								editor.hidePopups();
+								editor.focus();
+								return false;
 							}
-							//editor.$frame.contents().on("click",function(e)
-							//{
-								if($(focusedObj).is("td") || $(e.target).is("hr") 
-								|| $(focusedObj).is("img") || $(e.target).is("textarea") || $(e.target).is("input"))
-								{
-									//color:top,right,bottom,left
-									$(cb).each(function(idx,item)
-									{
-										if($(item).prop("checked")==true && idx<4)
-										{
-											//color
-											if($(cbs[0]).prop("checked")==true)
-											{
-												$(focusedObj).css("border-image","");
-												$(focusedObj).css("border-"+$(cb[idx]).val()+"-color",bdColor);
-												$(focusedObj).css("border-"+$(cb[idx]).val()+"-style",$(popup).find(".border.Style").val());
-												$(focusedObj).css("border-"+$(cb[idx]).val()+"-width",$(popup).find(".border.Width").val());
-											}
-											else
-											{
-												$(focusedObj).css($(cb[idx]).val(),"");
-											}
-										}
-									});	
-									
-									//image
-									if($(popup).find("input[type=radio]:checked").val()=="url" 
-										&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
-										&& $(cbs[1]).prop("checked")==true)
-									{//url
-										$(focusedObj).css("border-image","");
-										$(focusedObj).css("border-image-source",
-											$(popup).find(".sampleimage").css("background-image"));
-										$(focusedObj).css("border-image-slice",
-											$(popup).find(".imageOptions[name='slice']").val());
-										$(focusedObj).css("border-image-width",
-											$(popup).find(".imageOptions[name='width']").val());
-										$(focusedObj).css("border-image-outset",
-											$(popup).find(".imageOptions[name='outset']").val());
-										$(focusedObj).css("border-image-repeat",
-											$(popup).find(".imageOptions[name='repeat']").val());
-									}
-									else if($(cbs[1]).prop("checked")==true)
-									{//gradient
-										$(focusedObj).css("border-image-source","");
-										$(focusedObj).css("border-image",
-											($(popup).find("input[name='repeat']:selected").val()=="repeat" ?
-												"repeating-linear-gradient(" : "linear-gradient(") +
-											$(popup).find(".imageOptions[name='angle']").val() + "deg," +
-											$(popup).find(".imageOptions[name='colors']").val() +")");
-											
-										$(focusedObj).css("border-image-slice",
-											$(popup).find(".imageOptions[name='slice']").val());
-										$(focusedObj).css("border-image-width",
-											$(popup).find(".imageOptions[name='width']").val());
-										$(focusedObj).css("border-image-outset",
-											$(popup).find(".imageOptions[name='outset']").val());
-										$(focusedObj).css("border-image-repeat",
-											$(popup).find("input[name='repeat']:selected").val());
-									}
-
-									editor.updateTextArea();//update iframe
-								}
-								//off event -- cancel when click except table (include td,hr,img)
-								editor.$frame.contents().off("click");
-							//});
-							editor.hidePopups();
-							editor.focus();
-							return false;
+							else if($(e.target).prop("class")=="cancel")
+							{//cancel
+								//roll back
+								$(focusedObj).attr("style",currentStyle);
+							}
+							else
+							{//close
+								//off event
+								$(frameDocument).off(CLICK);
+								
+								editor.hidePopups();
+								editor.focus();
+								return false;
+							}
 						});
 				}
 
@@ -1006,133 +985,140 @@
 				else if (buttonName === "background")
 				{
 					var imageObj,bgColor,
-						cbs = $(popup).find(".appobj");	
+						currentBG=$(focusedObj).attr("style"),
+						cbs = $popup.find(".appobj");	
 					
 					//Get clicked color code 
-					$(popup).find(".colorpicker")
-						.off("click")
-						.on("click", function (e) {
+					$popup.find(".colorpicker")
+						.off(CLICK)
+						.on(CLICK, function (e) {
 
 							//Get the background-color from color picker
-							var rgbColor=$(focusedObj).css("background-color")!="transparent" ?
+							var rgbColor=$(e.target).css("background-color")!="transparent" ?
 											$(e.target).css("background-color") : "0,0,0,0";
-							bgColor=$(popup).find(".samplecolor").css("background-color");
+							bgColor=$popup.find(".samplecolor").css("background-color");
 							var rgb=rgbColor.replace("rgb(","").replace("rgba(","").replace(")","").split(",");
 							
-							$(popup).find(".rgbaColor.r").val(parseInt(rgb[0]));
-							$(popup).find(".rgbaColor.g").val(parseInt(rgb[1]));
-							$(popup).find(".rgbaColor.b").val(parseInt(rgb[2]));
-							$(popup).find(".rgbaColor.a").val(rgb.length!=3 ? 0 : 1 );
+							$popup.find(".rgbaColor.r").val(parseInt(rgb[0]));
+							$popup.find(".rgbaColor.g").val(parseInt(rgb[1]));
+							$popup.find(".rgbaColor.b").val(parseInt(rgb[2]));
+							$popup.find(".rgbaColor.a").val(rgb.length!=3 ? 0 : 1 );
 							bgColor="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+ (rgb.length!=3 ? 0 : 1)+")";
 							
-							$(popup).find(".samplecolor").css("background-color",bgColor);
+							$popup.find(".samplecolor").css("background-color",bgColor);
 							
 							// Get the which positions are change
-							var cb = $(popup).find("input[type=checkbox]");
+							var cb = $popup.find("input[type=checkbox]");
 							
 							//switch background color visibility by checkbox
 							if($(cb[0]).prop("checked")==true)
 							{
-								$(popup).find(".syncBackground").css("background-color",bgColor);
+								$(focusedObj).css("background-color",bgColor);
 							}
 							else
 							{
-								$(popup).find(".syncBackground").css("background-color","");
+								$(focusedObj).css("background-color","");
 							}
 						});
 						
 					//drag and drop
-					dndImage(".sampleimage",".syncBackground",$(popup));
+					dndImage(".sampleimage",focusedObj,$popup,buttonName);
 					
 					//on change RGBA number
-					$(popup).find(".rgbaColor")
+					$popup.find(".rgbaColor")
 						.on("change", function (e) {
-								bgColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()
-										+","+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
+								bgColor="rgba("+$popup.find(".rgbaColor.r").val()+","+$popup.find(".rgbaColor.g").val()
+										+","+$popup.find(".rgbaColor.b").val()+","+$popup.find(".rgbaColor.a").val()+")";
 							
-								$(popup).find(".samplecolor").css("background-color",bgColor);
+								$popup.find(".samplecolor").css("background-color",bgColor);
 							});
 					
 					//on change Check Box 
-					$(popup)
+					$popup
 						.on("change","input[type=checkbox]", function (e) {
 								// Get the which positions are change
 								
 								//switch background color or image visibility by checkbox
 								if($(cbs[0]).prop("checked")==true)
 								{
-									$(popup).find(".syncBackground").css("background-color",bgColor);
+									$(focusedObj).css("background-color",bgColor);
 								}
 								else
 								{
-									$(popup).find(".syncBackground").css("background-color","");
+									$(focusedObj).css("background-color","");
 								}
 								
 								if($(cbs[1]).prop("checked")==true)
 								{
-									$(popup).find(".syncBackground").css("background-image","url('"+imageObj+"')");
+									$(focusedObj).css("background-image","url('"+imageObj+"')");
 								}
 								else
 								{
-									$(popup).find(".syncBackground").css("background-image","");
+									$(focusedObj).css("background-image","");
 								}
 							});
 							
 					//on change check Box of image type 
-					$(popup)
-						.on("change input","input[type=radio],.imageOptions", function (e) {
+					$popup
+						.on("change input","input[type=radio],.imageOptions,.appobj", function (e) {
 								
-							var imageOptions=$(popup).find(".imageOptions[name='repeat']");	
+							var imageOptions=$popup.find(".imageOptions[name='repeat']");	
 								//check selection with URL or Gradient
-								if($(popup).find("input[type=radio]:checked").val()=="url" 
-									&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
+								if($popup.find("input[type=radio]:checked").val()=="url" 
+									&& $popup.find(".sampleimage").css("background-image").indexOf("url(")!=-1
 									&& $(cbs[1]).prop("checked")==true)
 								{//url
-									$(popup).find(".syncBackground").css("background","");
-									$(popup).find(".syncBackground").css("background-image",
-										$(popup).find(".sampleimage").css("background-image"));
+									$(focusedObj).css("background","");
+									$(focusedObj).css("background-image",
+										$popup.find(".sampleimage").css("background-image"));
 									if($(imageOptions).val()=="cover" || $(imageOptions).val()=="contain")
 									{
-										$(popup).find(".syncBackground").css("background-size",
+										$(focusedObj).css("background-size",
 											$(imageOptions).val());
 									}
 									else
 									{
-										$(popup).find(".syncBackground").css("background-repeat",
+										$(focusedObj).css("background-repeat",
 											$(imageOptions).val());
 									}
 								}
 								else if($(cbs[1]).prop("checked")==true)
 								{//gradient
-									$(popup).find(".syncBackground").css("background-image","");
-									$(popup).find(".syncBackground").css("background",
-										($(popup).find(".imageOptions[name='repeat']").val()=="repeat" ?
+									$(focusedObj).css("background-image","");
+									$(focusedObj).css("background",
+										($popup.find(".imageOptions[name='repeat']").val()=="repeat" ?
 											"repeating-linear-gradient(" : "linear-gradient(") +
-										$(popup).find(".imageOptions[name='angle']").val() + "deg," +
-										$(popup).find(".imageOptions[name='colors']").val() +")");
+										$popup.find(".imageOptions[name='angle']").val() + "deg," +
+										$popup.find(".imageOptions[name='colors']").val() +")");
 								}
 							});
 							
 					//Submit
-					$(popup).find("input[type='button']") //children(":button")
-						.off("click")
-						.on("click", function (e) {
-							bgColor="rgba("+$(popup).find(".rgbaColor.r").val()+","+$(popup).find(".rgbaColor.g").val()+","
-									+$(popup).find(".rgbaColor.b").val()+","+$(popup).find(".rgbaColor.a").val()+")";
+					$popup.find("input[type='button']") 
+						.off(CLICK)
+						.on(CLICK, function (e) {
+							bgColor="rgba("+$popup.find(".rgbaColor.r").val()+","+$popup.find(".rgbaColor.g").val()+","
+									+$popup.find(".rgbaColor.b").val()+","+$popup.find(".rgbaColor.a").val()+")";
 							
 							//forced fire when button was 'Apply to body'
-							if($(e.target).prop("class")==".toBody")
+							if($(e.target).prop("class")==".apply")
 							{
-								drawBackground(editor.$frame.contents().find("body"));
+								//Apply the image to cell
+								drawBackground(focusedObj);
+								currentBG=$(focusedObj).attr("style");
+							}
+							else if($(e.target).prop("class")==".cancel")
+							{//cancelation
+								$(focusedObj).attr("style",currentBG);
 							}
 							else
 							{
-							//Apply the image to cell
-							//editor.$frame.contents().on("click",function(e)
-							//{
-								drawBackground(focusedObj);
-							//});
+								//close
+								editor.hidePopups();
+								editor.focus();
+								return false;
 							}
+							
 							//common draw procedure
 							function drawBackground(target)
 							{
@@ -1145,15 +1131,15 @@
 										$(target).css("background-color",bgColor);
 									}	
 									
-									var imageOptions=$(popup).find(".imageOptions[name='repeat']");	
+									var imageOptions=$popup.find(".imageOptions[name='repeat']");	
 									
-									if($(popup).find("input[type=radio]:checked").val()=="url" 
-										&& $(popup).find(".sampleimage").css("background-image").indexOf("url(")!=-1
+									if($popup.find("input[type=radio]:checked").val()=="url" 
+										&& $popup.find(".sampleimage").css("background-image").indexOf("url(")!=-1
 										&& $(cbs[1]).prop("checked")==true)
 									{//url
 										$(target).css("background","");
 										$(target).css("background-image",
-											$(popup).find(".sampleimage").css("background-image"));
+											$popup.find(".sampleimage").css("background-image"));
 										if($(imageOptions).val()=="cover" || $(imageOptions).val()=="contain")
 											$(target).css("background-size",$(imageOptions).val());
 										else
@@ -1163,81 +1149,84 @@
 									{//gradient
 										$(target).css("background-image","");
 										$(target).css("background",
-											($(popup).find(".imageOptions[name='repeat']").val()=="repeat" ?
+											($popup.find(".imageOptions[name='repeat']").val()=="repeat" ?
 												"repeating-linear-gradient(" : "linear-gradient(") +
-											$(popup).find(".imageOptions[name='angle']").val() + "deg," +
-											$(popup).find(".imageOptions[name='colors']").val() +")");
+											$popup.find(".imageOptions[name='angle']").val() + "deg," +
+											$popup.find(".imageOptions[name='colors']").val() +")");
 
 									}
 									editor.updateTextArea();//update iframe
 								}
 								
-								
 								//off event -- cancel when click except table (include td)
-								editor.$frame.contents().off("click");
+								$(frameDocument).off("click");
 							}
 							
-							editor.hidePopups();
-							editor.focus();
-							return false;
 						});
 				}
 				
 				//rotation
 				else if (buttonName === "rotation")
 				{
-					var target="",defX,defY,defD,defS;
-					//target=focusedObj;// ? focusedObj : prevObj;
-						if($(focusedObj)!="" && $(focusedObj)!=undefined)
-							{
-								if($(focusedObj).is("td") || $(focusedObj).is("th"))
-									focusedObj=$(focusedObj).closest("table");
-								if($(focusedObj).css("position")=="static") $(focusedObj).css("position",editor.options.position);
-								var tempPos=($(focusedObj).css("transform-origin")).split(" "),
-									tempD=$(focusedObj).css("transform");
-								defX=parseInt(tempPos[0]);
-								defY=parseInt(tempPos[1]);
-								var tempH=$(focusedObj).outerHeight(),
-									tempW=$(focusedObj).outerWidth();
-								$(popup).find(".XPosition:nth-child("+(parseInt(defX/tempW*2)+1)+")").prop("selected",true);
-								$(popup).find(".YPosition:nth-child("+(parseInt(defY/tempH*2)+1)+")").prop("selected",true);
-								if(tempD=="none")
-								{
-									defD=0;
-									defS=1;
-								}
-								else
-								{
-									tempD=tempD.replace("matrix(","");
-									var aryD=tempD.split(",");
-									defD=Math.atan2(parseFloat(aryD[1]),parseFloat(aryD[0]))*180/Math.PI;
-									defS=Math.sqrt(Math.pow(parseFloat(aryD[0]),2)+Math.pow(parseFloat(aryD[1]),2));
-								}
-								$(popup).find(".deg").val(defD);
-							}
-					$(popup)
+					var target="",defX,defY,defD,defS,$tempObj=$(focusedObj);
+					if($(focusedObj).is("body"))
+					{
+						alert("Please select object except body.");
+						editor.hidePopups();
+						editor.focus();
+						return false;
+					}
+
+						if($(focusedObj).is("td") || $(focusedObj).is("th"))
+							$tempObj=$(focusedObj).closest("table");
+						if($tempObj.css("position")=="static") $tempObj.css("position",editor.options.position);
+						var tempPos= $tempObj.css("transform-origin")!=undefined ? 
+							$tempObj.css("transform-origin").split(" ") : [0,0] ,
+							tempD=$tempObj.css("transform");
+						defX=parseInt(tempPos[0]);
+						defY=parseInt(tempPos[1]);
+						
+						var tempH=$tempObj.outerHeight(),
+							tempW=$tempObj.outerWidth();
+						$popup.find(".XPosition:nth-child("+(parseInt(defX/tempW*2)+1)+")").prop("selected",true);
+						$popup.find(".YPosition:nth-child("+(parseInt(defY/tempH*2)+1)+")").prop("selected",true);
+						if(tempD=="none")
+						{
+							defD=0;
+							defS=1;
+						}
+						else
+						{
+							tempD=tempD.replace("matrix(","");
+							var aryD=tempD.split(",");
+							defD=Math.atan2(parseFloat(aryD[1]),parseFloat(aryD[0]))*180/Math.PI;
+							defS=Math.sqrt(Math.pow(parseFloat(aryD[0]),2)+Math.pow(parseFloat(aryD[1]),2));
+						}
+						$popup.find(".deg").val(defD);
+					
+					$popup
 						.on("change input",".deg,.XPosition,.YPosition",function(e)
 						{
-							if($(focusedObj)!="" && $(focusedObj)!=undefined &&	!$(focusedObj).is("html") )
+							if(!$(focusedObj).is("html") )
 							{	
-								var x=$(popup).find(".XPosition").val(),
-									y=$(popup).find(".YPosition").val(),
-									deg=$(popup).find(".deg").val();
-								$(focusedObj).css({"transform-origin":x+" "+y,
+								var x=$popup.find(".XPosition").val(),
+									y=$popup.find(".YPosition").val(),
+									deg=$popup.find(".deg").val();
+								$tempObj.css({"transform-origin":x+" "+y,
 									"transform":"rotate("+deg+"deg) scale("+defS+")"});
 							}
 							else
 							{
-								alert("Select object");
+								alert("Please select object.");
 							}
 						});
-					$(popup).find("input[type='button']")
-						.off("click")
-						.on("click",function(e) {
+					$popup.find("input[type='button']")
+						.off(CLICK)
+						.on(CLICK,function(e) {
 							if($(e.target).attr("class")!="apply")
 							{
-								$(focusedObj).css({"transform-origin":defX+" "+defY,
-									"transform":"rotate("+defD+"deg)"});
+								$tempObj.css({"transform-origin":defX+" "+defY,
+									"transform":"rotate("+defD+"deg) scale("+defS+")"});
 								editor.updateTextArea();//update iframe
 							}
 							editor.hidePopups();
@@ -1249,16 +1238,12 @@
 				//perspect
 				else if (buttonName === "perspect")
 				{
-					$(popup).find(":button")
-						.off("click")
-						.on("click",function(e) {
+					$popup.find(":button")
+						.off(CLICK)
+						.on(CLICK,function(e) {
 							var perspect=$(e.target).attr("class");
 							
-							//Apply
-							//editor.$frame.contents().on("click",function(e)
-							//{
-								perspective(focusedObj,perspect);
-							//});
+							perspective(focusedObj,perspect);
 							
 							editor.hidePopups();
 							editor.focus();
@@ -1268,7 +1253,7 @@
 					//perspective control
 					function perspective(target,perspect)
 					{
-						var children=editor.$frame.contents().find("body").children(),
+						var children=$(frameBody).children(),
 							maxid;
 						zidx=0;
 						$(children).each(function(idx,item)
@@ -1371,11 +1356,11 @@
 				else if (buttonName === "bodystyle")
 				{
 					//insert style of body
-					$(popup).find("textarea").val(editor.$frame.contents().find("body").attr("style"));
+					$popup.find("textarea").val($(frameBody).attr("style"));
 					//Submit
-					$(popup).find("input[type='button']") //children(":button")
-						.off("click")
-						.on("click", function (e) {
+					$popup.find("input[type='button']") //children(":button")
+						.off(CLICK)
+						.on(CLICK, function (e) {
 							editor.hidePopups();
 							editor.focus();
 							return false;				
@@ -1500,13 +1485,14 @@
 
 				//image or text area
 				if($(e.target).is("img") || $(e.target).is("textarea") ) Mousedown(e,e.target);
-					
+
 				//decorated text
-				if($(e.target).is("span"))
+				if($(e.target).is("span") )
 				{
 					if($(e.target).css("position")=="static") 
 						$(e.target).css("position",editor.options.position);
-					Mousedown(e,e.target);
+					if(e.originalEvent.shiftKey==true)//shift key
+						Mousedown(e,e.target);
 				}
 				
 				//table
@@ -1560,6 +1546,8 @@
 			$(target).css("cursor","default");
 			$(frameDocument).css("cursor","default");
 			target="";
+			
+			editor.updateTextArea();//update iframe
 		}
 		
 		///table///
@@ -1630,7 +1618,7 @@
 					$(frameBody).find(".divTable").remove();
 					
 					editor.updateTextArea();//update iframe
-					focusedObj=prevObj=$(obj);
+					//focusedObj=prevObj=$(obj);
 				},10);
 			}
 		}
@@ -1715,12 +1703,12 @@
         else if (popupName === "color") {
             var colors = options.colors.split(" ");
             if (colors.length < 10)
-                $popup.width("auto");
-            $.each(colors, function (idx, color) {
+                $(colorDiv).width("auto");
+			$.each(colors, function (idx, color) {
                 $(DIV_TAG).appendTo($popup)
                     .css(BACKGROUND_COLOR, "#" + color);
             });
-			$($popup).append(
+			$popup.append(
 				'<div style="text-align:center;width:140px;height:14px;background-color:transparent">Transparent</div>'
 				);//add transparent color
             popupTypeClass = COLOR_CLASS;
@@ -1767,7 +1755,7 @@
 				'<label>Rows:<input type="text" value="4" style="width:40px"></label>' +//rows
 				'<br /><input type="button" value="Submit">'
 			);
-			//popupTypeClass = PROMPT_CLASS;
+			popupTypeClass = PROMPT_CLASS;
 		}
 
 		//Insert rows and columns in table
@@ -1777,10 +1765,9 @@
 				'<label><input type="radio" value="rear" name="insertFR">Insert in back of object.</label><br>'+//insert in rear of element'
 				'<label><input type="text" class="insertRC" value="0" style="width:40px">Insert columns</label>&nbsp;&nbsp;' +//insert columns
 				'<label><input type="text" class="insertRC" value="0" style="width:40px">Insert rows</label>' +//insert rows
-				'<br>Submit後にセルをクリック<br>Click taget cell after `Submit` press'+
-				'<br /><input type="button" value="Submit">'
+				'<br /><input type="button" class="apply" value="Submit"><input type="button" class="close" value="Close">'
 			);
-			$($popup).css({"word-braek":"break-word","width":"150px"});
+			$popup.css({"word-braek":"break-word","width":"150px"});
 			popupTypeClass = PROMPT_CLASS;
 		}
 
@@ -1788,12 +1775,11 @@
 		else if (popupName === "resizecell") {
 			$popup.html(
 				'変更しない場合は0<br>Input `0` if you don\'t want.<br>'+//0 is no change
-				'<label>Width<input type="text" class="resizeWH" value="0" style="width:40px">px</label>&nbsp;&nbsp;' +//width
+				'<label>Width<input type="text" class="resizeWH" value="0" style="width:40px">px</label><br>' +//width
 				'<label>Height<input type="text" class="resizeWH" value="0" style="width:40px">px</label>' +//height
-				'<br>Submit後にセルをクリック<br>Click taget cell after `Submit` press' +
-				'<br /><input type="button" value="Submit">'
+				'<br /><input type="button" class="apply" value="Apply"><input type="button" class="close" value="Close">'
 			);
-			$($popup).css({"word-braek":"break-word","width":"150px"});
+			$popup.css({"word-braek":"break-word","width":"150px"});
 			popupTypeClass = PROMPT_CLASS;
 		}
 
@@ -1830,8 +1816,8 @@
 					.addClass("colorpicker");
             });
 			$(colorDiv).append('<div class="colorpicker" style="text-align:center;width:148px;height:14px;background-color:transparent;border:1px solid black">Transparent</div>' );
-			$($popup).append($(colorDiv));
-			$($popup).append(
+			$popup.append($(colorDiv));
+			$popup.append(
 				'R<input type="number" class="rgbaColor r" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
 				'G<input type="number" class="rgbaColor g" min=0 max=255 style="width:4em"><br>' +
 				'B<input type="number" class="rgbaColor b" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
@@ -1865,14 +1851,11 @@
 				'value="0" title="The gradation angle.[Clockwise] 0 deg is bottom to top." style="width:60px">degrees<br>' +
 				'Colors(Gradient only)<input type="text" name="colors" class="imageOptions" value="red,green,blue"><br>' +
 				'</div></div>' +
-				
-				'Sample<br><table style="border-collapse:border-collapse;"><tr><td class="bordersample" '+
-				'style="border-style:solid;border-width:1px;border-color:black;width:90px;height:10px">' +
-				'</td></tr></table>' +
-				'<br>Submit後に対象をクリック<br>Click taget object after `Submit` press.'+
-				'<br /><input type="button" value="Submit">'				
+
+				'<br /><input type="button" class="apply" value="Apply">' +
+				'<input type="button" class="cancel" value="Cancel"><input type="button" class="close" value="Close">'				
 				 );
-			$($popup).css({"word-braek":"break-word","width":"150px"});
+			$popup.css({"word-braek":"break-word","width":"150px"});
             popupTypeClass = PROMPT_CLASS;
         }
 		
@@ -1888,8 +1871,8 @@
 					.addClass("colorpicker");
             });
 			$(colorDiv).append('<div class="colorpicker" style="text-align:center;width:148px;height:14px;background-color:transparent;border:1px solid black">Transparent</div>' );
-			$($popup).append($(colorDiv));
-			$($popup).append(
+			$popup.append($(colorDiv));
+			$popup.append(
 				'R<input type="number" class="rgbaColor r" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
 				'G<input type="number" class="rgbaColor g" min=0 max=255 style="width:4em"><br>' +
 				'B<input type="number" class="rgbaColor b" min=0 max=255 style="width:4em">&nbsp;&nbsp;' +
@@ -1915,18 +1898,16 @@
 				'Colors(Gradient only)<input type="text" name="colors" class="imageOptions" value="red,green,blue"><br>' +
 				'</div>' +
 				
-				'Smaple<br>' +
-				'<div class="syncBackground" style="text-align:center;width:140px;height:14px;border:1px solid black"></div>' +
-				'<br>Submit後に対象をクリック<br>Click taget object after `Submit` press.'+
-				'<br><input type="button" value="Submit" class="submit"><input type="button" value="Apply to body" class=".toBody">');
-			$($popup).css({"word-braek":"break-word","width":"150px"});
+				'<br><input type="button" value="Apply" class="apply">' +
+				'<input type="button" value="Cancel" class="cancel"><input type="button" value="Close" class="close">');
+			$popup.css({"word-braek":"break-word","width":"150px"});
 				popupTypeClass = PROMPT_CLASS;
 		}
 		
 		//rotation
 		else if (popupName === "rotation")
 		{
-			$($popup).append('X-position<br><select class="XPosition">' +
+			$popup.append('X-position<br><select class="XPosition">' +
 				'<option value="left">Left</option>' +
 				'<option value="center" selected>Center</option>' +
 				'<option value="right">Right</option></select><br>' +
@@ -1934,26 +1915,28 @@
 				'<option value="top">Top</option>' +
 				'<option value="center" selected>Center</option>' +
 				'<option value="bottom">Bottom</option></select><br>' +
-				'rotate(Clockwise)<br><input type="number" class="deg" value="0">[deg]<br>' +
+				'rotate(Clockwise)<br>' +
+				'<input type="number" class="deg" value="0" style="font-size:16px;width:110px">[deg]<br>' +
 				'<input type="button" class="apply" value="Apply">&nbsp;&nbsp;' +
 				'<input type="button" class="cancel" value="Cancel">');
-			$($popup).css({"background-color":"#F6F7F9","width":"150px"});
+			$popup.css({"background-color":"#F6F7F9","width":"150px"});
 			popupTypeClass = PROMPT_CLASS;
 		}
 		
 		//perspect
 		else if (popupName === "perspect")
 		{
-			$($popup).append('<li style="list-style-type:none">' +
+			$popup.append('<li style="list-style-type:none">' +
 							'<ul style="padding-left:0px"><input type="button" class="toMostFront" value="To the most front"></ul>' +
 							'<ul style="padding-left:0px"><input type="button" class="toFront" value="To the front"></ul>'+
 							'<ul style="padding-left:0px"><input type="button" class="toBack" value="To the back"></ul>' +
 							'<ul style="padding-left:0px"><input type="button" class="toMostBack" value="To the most back"></ul></li>');
+			popupTypeClass = PROMPT_CLASS;
 		}
 		
 		//display body style sheet
 		else if (popupName === "bodystyle") {
-			$($popup).append('<textarea style="min-width:150px;height:100px" readonly></textarea><br><input type="button" value="Close">');
+			$popup.append('<textarea style="min-width:150px;height:100px" readonly></textarea><br><input type="button" value="Close">');
 			popupTypeClass = PROMPT_CLASS;
 		}
 		
@@ -2423,6 +2406,10 @@
             }
             else if ((inSourceMode || iOS) && button.name !== "source") 
                 enabled = false;
+			else if ( (focusedObj=="" || focusedObj==undefined) 
+				&& ( command == "insertrowcol" || command == "resizecell" 
+					|| command == "borderstyle" || command == "background"
+					|| command == "perspect" || command == "rotation" )) enabled = false;
             else if (command && command !== "print" 
 						&& command !=="textbox" && command !=="table" 
 						&& command !=="insertrowcol" && command !== "resizecell" 
@@ -2932,7 +2919,7 @@
 	}
 	
 	//common function when drag and drop image file for background or border.
-	function dndImage(targetName,targetSample,popup)
+	function dndImage(targetName,targetSample,popup,buttonName)
 	{
 		//Drag and Drop
 		var draggingFile;
@@ -2982,17 +2969,17 @@
 					//switch background image visibility by checkbox
 					if($(cb[1]).prop("checked")==true)
 					{
-						if($(popup).find(targetSample).is("table"))
-							$(popup).find(targetSample).css("border-image-source","url('"+imageObj+"')");
+						if(buttonName==="borderstyle")
+							$(targetSample).css("border-image-source","url('"+imageObj+"')");
 						else
-							$(popup).find(targetSample).css("background-image","url('"+imageObj+"')");
+							$(targetSample).css("background-image","url('"+imageObj+"')");
 					}
 					else
 					{
-						if($(popup).find(targetSample).is("table"))
-							$(popup).find(targetSample).css("border-image-source","");
+						if(buttonName==="borderstyle")
+							$(targetSample).css("border-image-source","");
 						else
-							$(popup).find(targetSample).css("background-image","");
+							$(targetSample).css("background-image","");
 					}
 				}
 				file_reader.readAsDataURL(file);
