@@ -11,6 +11,12 @@ plug-in about javascript/jQuery<br>
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)
 <i> How different? </i>
 
+Ver.K
+<ul>
+	<li> Enable to remove border style. (if focused object was cell of table, then border is back to initial style)</li>
+	<li> Enable to focus out when click anywhere except rich text frame or pop-up buttons.</li>
+</ul>
+
 Ver.J
 <ul>
 	<li> Enable to rotate and drag with decorated text. (Shift + double click for drag mode)</li>
