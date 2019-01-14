@@ -13,7 +13,7 @@
  * modify ver.C Y.Urita 2019. 1. 2 Integration with jquery.cleditor.textbox.js, a littele improvement.
  * modify ver.D Y.Urita 2019. 1. 4 Integration with jquery.cleditor.table.custom.js,
  *								   Organization selection way of drag-mode to double click. and a littele improvement.
- * modify ver.E Y.Urita 2019. 1. 6 Improvement about borer & background drawing.
+ * modify ver.E Y.Urita 2019. 1. 6 Improvement about border & background drawing.
  * modify ver.F Y.Urita 2019. 1. 7 Bug fix (Problem not to drag)
  * modify ver.G Y.Urita 2019. 1. 8 Enable to Z-index control , choose to absolute position.
  * modify ver.H Y.Urita 2019. 1. 9 Enable to rotate
@@ -22,6 +22,7 @@
  *								   Enable to drag and rotate with decorated text (draft function)
  * modify ver.J Y.Urita 2019. 1.13 Enable to drag and rotate with decorated text.
 								   Change selective way of element from 'past setting' to 'previous setting'.
+ * modify ver.K Y.Urita 2019. 1.14 Improvement about focus out and border.
  */
  
 (function ($) {
@@ -380,7 +381,7 @@
 		editor.$frame.contents()
 			.off(CLICK)
 			.on(CLICK,$("body").children(),function(e)
-			{
+			{console.log(e.target);
 				if($(focusedObj)!="" && $(focusedObj)!=undefined)
 				{
 					$(focusedObj).css("border-top",objStyle.top);
@@ -391,10 +392,12 @@
 				if($(e.target).is("body") || $(e.taget).is("html") || 
 					e.target.nodeName==="HTML" || $(e.target).is(document))
 						focusedObj=editor.$frame.contents().find("body");
+				else if($(e.target).is(".divTable"))
+					return false;
 				else
 					focusedObj=e.target;
 				refreshButtons(editor);
-
+				console.log(focusedObj.nodeName);
 				//stack the border style of target object
 				objStyle.top=$(focusedObj).css("border-top");
 				objStyle.bottom=$(focusedObj).css("border-bottom");
@@ -417,6 +420,17 @@
 					$(focusedObj).css("border-right",objStyle.right);
 					focusedObj=undefined;
 				}
+			});
+		
+		editor.$main.not(".cleditorPopup")
+			.off(CLICK)
+			.on(CLICK,function(e)
+			{
+				$(focusedObj).css("border-top",objStyle.top);
+				$(focusedObj).css("border-bottom",objStyle.bottom);
+				$(focusedObj).css("border-left",objStyle.left);
+				$(focusedObj).css("border-right",objStyle.right);
+				focusedObj=undefined;
 			});
     };
 
@@ -874,7 +888,25 @@
 						.on("change","input[type=checkbox]", function (e) {
 							// Get the which positions are change
 							var cb=$popup.find("input[type=checkbox]");
-							
+
+							//remove all border (or initilize)
+							if($(cb[4]).prop("checked")==true && e.target==cb[4])
+							{
+								$(cb).not(cb[4]).prop("checked",false);
+								if($(focusedObj).is("td"))
+								{
+									$(focusedObj).css("border","1px solid black");
+								}
+								else
+								{
+									$(focusedObj).css("border","");
+								}
+							}
+							else if(e.target!=cb[4] && $(e.target).prop("checked")==true)
+							{
+								$(cb[4]).prop("checked",false);
+							}
+
 							//switch background color or image visibility by checkbox
 							
 							for(var i=0;i<4;i++){
@@ -1789,7 +1821,8 @@
 				'<label><input type="checkbox" name="borderbottom" value="bottom" checked>Bottom</label><br>'+//bottom
 				'<label><input type="checkbox" name="borderleft" value="left" checked>Left</label>&nbsp;'+//left
 				'<label><input type="checkbox" name="borderright" value="right" checked>Right</label><br>'+//right
-				
+				'<label><input type="checkbox" name="border" value="border">Remove all borders on this element.</label>' +
+
 				'<label>Line style<select class="border Style" ><br>' +//line type
 				'<option value="solid" selected>Solid</option>' +//solid
 				'<option value="dotted">Dotted</option>' +//dotted
